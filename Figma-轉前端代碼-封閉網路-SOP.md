@@ -213,64 +213,81 @@ figma_nodes.json 結構簡化示意：
 }
 ```
 
-#### 步驟 5：餵給 Claude Code 生成代碼
+#### 步驟 5：直接用 Python 串 Figma REST API + 公司內部 LLM API
+
+專案內已提供整合腳本 [figma_to_html.py](/Users/jim/Documents/project/ccrCode/figma_to_html.py)，流程如下：
+
+1. 解析 Figma URL 中的 `FILE_KEY` 與 `node-id`
+2. 呼叫 Figma REST API 取得節點 JSON、Variables、PNG 截圖
+3. 呼叫公司內部 OpenAI Compatible 多模態模型 API
+4. 輸出單檔 HTML
+
+先設定環境變數：
 
 ```bash
-# 在 Claude Code 中
-請讀取 ./figma_nodes.json 和 ./figma_variables.json，
-根據 Figma 設計數據生成 React + Tailwind CSS 元件。
+export FIGMA_TOKEN="figd_xxxxxxxxxxxxxxxxxx"
+export LLM_BASE_URL="http://your-internal-llm/v1"
+export LLM_API_KEY="your-api-key"
+export LLM_MODEL="gpt-4o"
 
-要求：
-- 使用語義化 HTML
-- 顏色使用 CSS 變數（從 variables 檔案提取）
-- 間距使用 Tailwind 的 spacing scale
-- 產生響應式佈局
+# 可選：如果你們內部實作的是 Responses API
+export LLM_API_STYLE="responses"
 ```
 
-#### 步驟 6（進階）：寫一個自動化腳本
+直接產生 HTML：
 
 ```bash
-#!/bin/bash
-# figma-extract.sh — 一鍵提取 Figma 設計數據
-
-FIGMA_TOKEN="${FIGMA_TOKEN:?請設定 FIGMA_TOKEN 環境變數}"
-FILE_KEY="$1"
-NODE_IDS="$2"
-OUTPUT_DIR="${3:-./figma-export}"
-
-if [ -z "$FILE_KEY" ] || [ -z "$NODE_IDS" ]; then
-  echo "用法: ./figma-extract.sh <FILE_KEY> <NODE_IDS> [OUTPUT_DIR]"
-  echo "範例: ./figma-extract.sh ABC123xyz '456-789,012-345' ./output"
-  exit 1
-fi
-
-mkdir -p "$OUTPUT_DIR"
-
-echo "📦 提取節點資料..."
-curl -s -H "X-Figma-Token: $FIGMA_TOKEN" \
-  "https://api.figma.com/v1/files/$FILE_KEY/nodes?ids=$NODE_IDS" \
-  > "$OUTPUT_DIR/nodes.json"
-
-echo "🎨 提取 Design Tokens..."
-curl -s -H "X-Figma-Token: $FIGMA_TOKEN" \
-  "https://api.figma.com/v1/files/$FILE_KEY/variables/local" \
-  > "$OUTPUT_DIR/variables.json"
-
-echo "🖼  匯出 PNG @2x..."
-RESPONSE=$(curl -s -H "X-Figma-Token: $FIGMA_TOKEN" \
-  "https://api.figma.com/v1/images/$FILE_KEY?ids=$NODE_IDS&format=png&scale=2")
-echo "$RESPONSE" > "$OUTPUT_DIR/image_urls.json"
-
-echo "🖼  匯出 SVG..."
-RESPONSE_SVG=$(curl -s -H "X-Figma-Token: $FIGMA_TOKEN" \
-  "https://api.figma.com/v1/images/$FILE_KEY?ids=$NODE_IDS&format=svg")
-echo "$RESPONSE_SVG" > "$OUTPUT_DIR/svg_urls.json"
-
-echo "✅ 完成！檔案儲存在 $OUTPUT_DIR/"
-echo ""
-echo "下一步：在 Claude Code 中執行"
-echo "  請讀取 $OUTPUT_DIR/nodes.json 和 $OUTPUT_DIR/variables.json，生成前端元件代碼"
+python figma_to_html.py \
+  "https://www.figma.com/design/ABC123xyz/My-Design?node-id=456-789" \
+  -o output.html \
+  --stack tailwind \
+  --save-json
 ```
+
+如果你們內部是 OpenAI Compatible Chat Completions API：
+
+```bash
+python figma_to_html.py \
+  "https://www.figma.com/design/ABC123xyz/My-Design?node-id=456-789" \
+  -o output.html \
+  --llm-api-style chat
+```
+
+如果你們內部是 OpenAI Compatible Responses API：
+
+```bash
+python figma_to_html.py \
+  "https://www.figma.com/design/ABC123xyz/My-Design?node-id=456-789" \
+  -o output.html \
+  --llm-api-style responses
+```
+
+常用選項：
+
+- `--stack tailwind`：輸出 Tailwind CDN 單檔 HTML
+- `--stack inline`：輸出純 inline CSS / style block 的 HTML
+- `--no-screenshot`：跳過 PNG 匯出，減少一次 Figma API 呼叫
+- `--no-tokens`：跳過 Variables 提取
+- `--save-json`：額外儲存 `figma_design.json`、`figma_tokens.json`、`figma_screenshot.png`
+- `--extra-prompt "使用繁體中文，按鈕圓角 12px"`：補充生成要求
+
+#### 步驟 6（進階）：整合腳本的呼叫方式
+
+腳本本身已內建這兩段 API 呼叫：
+
+- Figma REST API
+  - `/v1/files/{file_key}/nodes?ids={node_id}`
+  - `/v1/files/{file_key}/variables/local`
+  - `/v1/images/{file_key}?ids={node_id}&format=png&scale=2`
+- 公司內部 LLM API
+  - `POST {LLM_BASE_URL}/chat/completions`
+  - 或 `POST {LLM_BASE_URL}/responses`
+
+適用情境：
+
+- 不能使用 Claude Code
+- 公司內部已有 OpenAI Compatible completion / chat completion / responses API
+- 想要把 Figma 設計稿直接轉成 HTML，而不是手動複製 JSON 再貼給 AI
 
 #### 優缺點
 
