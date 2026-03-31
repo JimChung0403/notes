@@ -82,6 +82,20 @@ def parse_figma_url(url: str) -> tuple[str, str | None]:
 
 def _figma_get(endpoint: str) -> dict:
     """對 Figma API 發送 GET 請求。"""
+    proxies = {
+        "http": "zzz",
+        "https": "zzz",
+    }
+    response = requests.get(
+        f"{FIGMA_API}{endpoint}", 
+        headers={"X-Figma-Token": FIGMA_TOKEN},
+        proxies=proxies,
+        timeout=30
+    )
+    print(f"Status Code: {response.status_code}")
+    print(f"Response Body: {response.text}")
+
+    
     url = f"{FIGMA_API}{endpoint}"
     req = urllib.request.Request(url, headers={"X-Figma-Token": FIGMA_TOKEN})
     try:
