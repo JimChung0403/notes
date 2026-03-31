@@ -213,14 +213,19 @@ figma_nodes.json 結構簡化示意：
 }
 ```
 
-#### 步驟 5：直接用 Python 串 Figma REST API + 公司內部 LLM API
+#### 步驟 5：用兩段式 Python 腳本處理
 
-專案內已提供整合腳本 [figma_to_html.py](/Users/jim/Documents/project/ccrCode/figma_to_html.py)，流程如下：
+專案內已提供兩支腳本：
 
-1. 解析 Figma URL 中的 `FILE_KEY` 與 `node-id`
-2. 呼叫 Figma REST API 取得節點 JSON、Variables、PNG 截圖
-3. 呼叫公司內部 OpenAI Compatible 多模態模型 API
-4. 輸出單檔 HTML
+1. [figma_prepare_llm_input.py](/Users/jim/Documents/project/ccrCode/figma_prepare_llm_input.py)
+   - 解析 Figma URL 中的 `FILE_KEY` 與 `node-id`
+   - 呼叫 Figma REST API 取得節點 JSON、Variables、Styles
+   - 輸出單一 `figma_llm_input.json`
+2. [llm_input_to_html.py](/Users/jim/Documents/project/ccrCode/llm_input_to_html.py)
+   - 讀取 `figma_llm_input.json`
+   - 可選擇加入截圖路徑
+   - 呼叫公司內部 OpenAI Compatible 多模態模型 API
+   - 輸出單檔 HTML
 
 先設定環境變數：
 
@@ -234,52 +239,50 @@ export LLM_MODEL="gpt-4o"
 export LLM_API_STYLE="responses"
 ```
 
-直接產生 HTML：
+先產生給 LLM 的結構化 JSON：
 
 ```bash
-python figma_to_html.py \
+python figma_prepare_llm_input.py \
   "https://www.figma.com/design/ABC123xyz/My-Design?node-id=456-789" \
-  -o output.html \
-  --stack tailwind \
-  --save-json
+  -o figma_llm_input.json
 ```
 
-如果你們內部是 OpenAI Compatible Chat Completions API：
+再用預設的 `chat/completions` 產生 HTML：
 
 ```bash
-python figma_to_html.py \
-  "https://www.figma.com/design/ABC123xyz/My-Design?node-id=456-789" \
+python llm_input_to_html.py \
+  --input figma_llm_input.json \
+  --image ./figma_screenshot.png \
   -o output.html \
-  --llm-api-style chat
+  --stack inline
 ```
 
 如果你們內部是 OpenAI Compatible Responses API：
 
 ```bash
-python figma_to_html.py \
-  "https://www.figma.com/design/ABC123xyz/My-Design?node-id=456-789" \
+LLM_API_STYLE=responses python llm_input_to_html.py \
+  --input figma_llm_input.json \
+  --image ./figma_screenshot.png \
   -o output.html \
-  --llm-api-style responses
+  --stack inline
 ```
 
 常用選項：
 
-- `--stack tailwind`：輸出 Tailwind CDN 單檔 HTML
-- `--stack inline`：輸出純 inline CSS / style block 的 HTML
-- `--no-screenshot`：跳過 PNG 匯出，減少一次 Figma API 呼叫
-- `--no-tokens`：跳過 Variables 提取
-- `--save-json`：額外儲存 `figma_design.json`、`figma_tokens.json`、`figma_screenshot.png`
-- `--extra-prompt "使用繁體中文，按鈕圓角 12px"`：補充生成要求
+- `figma_prepare_llm_input.py --no-tokens`：跳過 Variables 提取
+- `llm_input_to_html.py --stack inline`：輸出純 inline CSS / style block 的 HTML
+- `llm_input_to_html.py --stack tailwind`：輸出 Tailwind CDN 單檔 HTML
+- `llm_input_to_html.py --extra-prompt "使用繁體中文，按鈕圓角 12px"`：補充生成要求
 
-#### 步驟 6（進階）：整合腳本的呼叫方式
+#### 步驟 6（進階）：兩支腳本的呼叫方式
 
 腳本本身已內建這兩段 API 呼叫：
 
-- Figma REST API
+- `figma_prepare_llm_input.py` 會呼叫 Figma REST API
   - `/v1/files/{file_key}/nodes?ids={node_id}`
   - `/v1/files/{file_key}/variables/local`
-  - `/v1/images/{file_key}?ids={node_id}&format=png&scale=2`
-- 公司內部 LLM API
+  - `/v1/files/{file_key}/styles`
+- `llm_input_to_html.py` 會呼叫公司內部 LLM API
   - `POST {LLM_BASE_URL}/chat/completions`
   - 或 `POST {LLM_BASE_URL}/responses`
 
