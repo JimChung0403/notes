@@ -32,6 +32,7 @@ import json
 import os
 import re
 import sys
+import ssl
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -47,8 +48,11 @@ LLM_BASE_URL: str = os.environ.get("LLM_BASE_URL", "")  # e.g. http://10.0.1.50:
 LLM_API_KEY: str = os.environ.get("LLM_API_KEY", "")
 LLM_MODEL: str = os.environ.get("LLM_MODEL", "gpt-4o")
 LLM_API_STYLE: str = os.environ.get("LLM_API_STYLE", "chat").strip().lower()
+FIGMA_PROXY: str = os.environ.get("FIGMA_PROXY", "").strip()
+LLM_PROXY: str = os.environ.get("LLM_PROXY", "").strip()
+FIGMA_API: str = os.environ.get("FIGMA_API_BASE", "https://api.figma.com").rstrip("/")
 
-FIGMA_API = "https://api.figma.com"
+_SSL_CONTEXT = ssl.create_default_context()
 
 
 # ---------------------------------------------------------------------------
@@ -69,9 +73,11 @@ def parse_figma_url(url: str) -> tuple[str, str | None]:
     file_key = m.group(1)
 
     node_id = None
-    node_match = re.search(r"node-id=([0-9]+-[0-9]+)", url)
-    if node_match:
-        node_id = node_match.group(1)
+    parsed = urllib.parse.urlparse(url)
+    query = urllib.parse.parse_qs(parsed.query)
+    raw_node_id = query.get("node-id", [None])[0]
+    if raw_node_id:
+        node_id = urllib.parse.unquote(raw_node_id).replace(":", "-")
 
     return file_key, node_id
 
@@ -80,22 +86,116 @@ def parse_figma_url(url: str) -> tuple[str, str | None]:
 # Figma REST API
 # ---------------------------------------------------------------------------
 
-def _figma_get(endpoint: str) -> dict:
-    """對 Figma API 發送 GET 請求。"""
-    url = f"{FIGMA_API}{endpoint}"
-    req = urllib.request.Request(url, headers={"X-Figma-Token": FIGMA_TOKEN})
+def _build_proxy_handler(service: str, target_url: str) -> urllib.request.ProxyHandler | None:
+    """依服務與 URL 選擇 proxy 設定。"""
+    parsed = urllib.parse.urlparse(target_url)
+    scheme = parsed.scheme.lower()
+    service_proxy = FIGMA_PROXY if service == "figma" else LLM_PROXY if service == "llm" else ""
+    proxy_url = (
+        service_proxy
+        or os.environ.get(f"{scheme.upper()}_PROXY", "")
+        or os.environ.get(f"{scheme.lower()}_proxy", "")
+        or os.environ.get("ALL_PROXY", "")
+        or os.environ.get("all_proxy", "")
+    ).strip()
+    if not proxy_url:
+        return None
+    return urllib.request.ProxyHandler({"http": proxy_url, "https": proxy_url})
+
+
+def _build_opener(service: str, target_url: str) -> urllib.request.OpenerDirector:
+    handlers: list[urllib.request.BaseHandler] = []
+    proxy_handler = _build_proxy_handler(service, target_url)
+    if proxy_handler:
+        handlers.append(proxy_handler)
+    if urllib.parse.urlparse(target_url).scheme.lower() == "https":
+        handlers.append(urllib.request.HTTPSHandler(context=_SSL_CONTEXT))
+    return urllib.request.build_opener(*handlers)
+
+
+def _request_json(
+    service: str,
+    url: str,
+    *,
+    headers: dict[str, str] | None = None,
+    data: dict | None = None,
+    method: str = "GET",
+    timeout: int = 30,
+) -> dict:
+    """發送 JSON 請求並解析回應。"""
+    request_headers = headers.copy() if headers else {}
+    request_data = None
+    if data is not None:
+        request_headers.setdefault("Content-Type", "application/json")
+        request_data = json.dumps(data).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=request_data,
+        headers=request_headers,
+        method=method,
+    )
+    opener = _build_opener(service, url)
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read().decode())
+        with opener.open(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8")
+            return json.loads(raw) if raw else {}
     except urllib.error.HTTPError as e:
-        body = e.read().decode() if e.fp else ""
-        raise RuntimeError(f"Figma API {e.code}: {body}") from e
+        body = e.read().decode("utf-8", errors="replace") if e.fp else ""
+        raise RuntimeError(f"{service.upper()} API {e.code}: {body}") from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"{service.upper()} API 連線失敗: {e.reason}") from e
+
+
+def _request_bytes(
+    service: str,
+    url: str,
+    *,
+    headers: dict[str, str] | None = None,
+    timeout: int = 30,
+) -> bytes:
+    """發送請求並回傳原始 bytes。"""
+    req = urllib.request.Request(url, headers=headers or {})
+    opener = _build_opener(service, url)
+    try:
+        with opener.open(req, timeout=timeout) as resp:
+            return resp.read()
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace") if e.fp else ""
+        raise RuntimeError(f"{service.upper()} API {e.code}: {body}") from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"{service.upper()} API 連線失敗: {e.reason}") from e
+
+
+def _normalize_node_ids(node_ids: str) -> str:
+    """將 Figma URL 中的 node-id 正規化成 API 可用格式。"""
+    parts = []
+    for raw_part in node_ids.split(","):
+        part = raw_part.strip()
+        if not part:
+            continue
+        parts.append(part.replace("-", ":"))
+    if not parts:
+        raise ValueError("node-id 為空，無法呼叫 Figma API")
+    return ",".join(parts)
+
+
+def _figma_get(endpoint: str, params: dict[str, str] | None = None) -> dict:
+    """對 Figma API 發送 GET 請求。"""
+    query = f"?{urllib.parse.urlencode(params)}" if params else ""
+    url = f"{FIGMA_API}{endpoint}{query}"
+    return _request_json(
+        "figma",
+        url,
+        headers={"X-Figma-Token": FIGMA_TOKEN},
+    )
 
 
 def fetch_nodes(file_key: str, node_ids: str) -> dict:
     """取得指定 node 的完整設計數據。"""
-    print(f"[Figma] 取得節點資料: {node_ids}")
-    return _figma_get(f"/v1/files/{file_key}/nodes?ids={node_ids}")
+    normalized_ids = _normalize_node_ids(node_ids)
+    print(f"[Figma] 取得節點資料: {normalized_ids}")
+    return _figma_get(f"/v1/files/{file_key}/nodes", {"ids": normalized_ids})
 
 
 def fetch_variables(file_key: str) -> dict:
@@ -119,13 +219,17 @@ def fetch_styles(file_key: str) -> dict:
 
 def fetch_image_url(file_key: str, node_ids: str, fmt: str = "png", scale: int = 2) -> str | None:
     """匯出節點為圖片，回傳圖片下載 URL。"""
+    normalized_ids = _normalize_node_ids(node_ids)
     print(f"[Figma] 匯出 {fmt.upper()} @{scale}x ...")
     data = _figma_get(
-        f"/v1/images/{file_key}?ids={node_ids}&format={fmt}&scale={scale}"
+        f"/v1/images/{file_key}",
+        {"ids": normalized_ids, "format": fmt, "scale": str(scale)},
     )
     images = data.get("images", {})
-    # node_ids 格式 "123-456" 但 API 回傳 key 可能是 "123:456"
-    for key, url in images.items():
+    preferred_url = images.get(normalized_ids)
+    if preferred_url:
+        return preferred_url
+    for _, url in images.items():
         if url:
             return url
     return None
@@ -134,9 +238,7 @@ def fetch_image_url(file_key: str, node_ids: str, fmt: str = "png", scale: int =
 def download_image(url: str) -> bytes:
     """下載圖片並回傳 bytes。"""
     print(f"[Figma] 下載圖片...")
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return resp.read()
+    return _request_bytes("figma", url)
 
 
 # ---------------------------------------------------------------------------
@@ -239,6 +341,316 @@ def extract_tokens_summary(variables_response: dict) -> dict:
     return {k: v for k, v in summary.items() if v}
 
 
+def extract_styles_summary(styles_response: dict) -> dict:
+    """從 styles API 回應中提取精簡摘要。"""
+    styles = styles_response.get("meta", {}).get("styles")
+    if not isinstance(styles, list):
+        styles = styles_response.get("styles", [])
+
+    summary: dict[str, list[dict]] = {}
+    for style in styles:
+        style_type = style.get("style_type", "UNKNOWN")
+        summary.setdefault(style_type, []).append({
+            "key": style.get("key"),
+            "name": style.get("name"),
+            "description": style.get("description", ""),
+        })
+
+    return {k: v for k, v in summary.items() if v}
+
+
+# ---------------------------------------------------------------------------
+# 給 LLM 的單一輸入檔
+# ---------------------------------------------------------------------------
+
+def _fmt_px(value) -> str | None:
+    if not isinstance(value, (int, float)):
+        return None
+    if float(value).is_integer():
+        return f"{int(value)}px"
+    return f"{value}px"
+
+
+def _rgba_to_css(color: dict, opacity: float | None = None) -> str | None:
+    if not isinstance(color, dict):
+        return None
+    r = round(color.get("r", 0) * 255)
+    g = round(color.get("g", 0) * 255)
+    b = round(color.get("b", 0) * 255)
+    a = opacity if opacity is not None else color.get("a", 1)
+    if a is None:
+        a = 1
+    if a < 1:
+        return f"rgba({r}, {g}, {b}, {a:.2f})"
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def _gradient_to_css(fill: dict) -> str | None:
+    gradient_type = fill.get("type", "")
+    stops = fill.get("gradientStops", [])
+    if not stops:
+        return None
+
+    stop_parts = []
+    for stop in stops:
+        color = _rgba_to_css(stop.get("color", {}))
+        position = stop.get("position")
+        if color is None:
+            continue
+        if isinstance(position, (int, float)):
+            stop_parts.append(f"{color} {round(position * 100)}%")
+        else:
+            stop_parts.append(color)
+
+    if not stop_parts:
+        return None
+
+    if gradient_type == "GRADIENT_RADIAL":
+        return f"radial-gradient(circle, {', '.join(stop_parts)})"
+    return f"linear-gradient(180deg, {', '.join(stop_parts)})"
+
+
+def _fills_to_css(fills: list[dict] | None, *, is_text: bool = False) -> dict[str, str]:
+    if not isinstance(fills, list):
+        return {}
+
+    for fill in fills:
+        if fill.get("visible") is False:
+            continue
+        fill_type = fill.get("type")
+        opacity = fill.get("opacity")
+        if fill_type == "SOLID":
+            color = _rgba_to_css(fill.get("color", {}), opacity)
+            if not color:
+                continue
+            return {"color" if is_text else "background-color": color}
+        if fill_type and fill_type.startswith("GRADIENT"):
+            gradient = _gradient_to_css(fill)
+            if gradient:
+                return {"background": gradient}
+    return {}
+
+
+def _strokes_to_css(strokes: list[dict] | None, stroke_weight, stroke_align) -> dict[str, str]:
+    if not isinstance(strokes, list):
+        return {}
+    for stroke in strokes:
+        if stroke.get("visible") is False:
+            continue
+        if stroke.get("type") != "SOLID":
+            continue
+        color = _rgba_to_css(stroke.get("color", {}), stroke.get("opacity"))
+        if not color:
+            continue
+        weight = _fmt_px(stroke_weight) or "1px"
+        border = f"{weight} solid {color}"
+        css = {"border": border}
+        if stroke_align:
+            css["border-align"] = str(stroke_align).lower()
+        return css
+    return {}
+
+
+def _effects_to_box_shadow(effects: list[dict] | None) -> str | None:
+    if not isinstance(effects, list):
+        return None
+
+    shadows = []
+    for effect in effects:
+        if effect.get("visible") is False:
+            continue
+        effect_type = effect.get("type")
+        if effect_type not in {"DROP_SHADOW", "INNER_SHADOW"}:
+            continue
+        offset = effect.get("offset", {})
+        radius = effect.get("radius", 0)
+        spread = effect.get("spread", 0)
+        color = _rgba_to_css(effect.get("color", {}))
+        if not color:
+            continue
+        inset = " inset" if effect_type == "INNER_SHADOW" else ""
+        shadows.append(
+            f"{_fmt_px(offset.get('x', 0)) or '0px'} "
+            f"{_fmt_px(offset.get('y', 0)) or '0px'} "
+            f"{_fmt_px(radius) or '0px'} "
+            f"{_fmt_px(spread) or '0px'} {color}{inset}"
+        )
+    return ", ".join(shadows) if shadows else None
+
+
+def _map_primary_axis(value: str | None) -> str | None:
+    mapping = {
+        "MIN": "flex-start",
+        "CENTER": "center",
+        "MAX": "flex-end",
+        "SPACE_BETWEEN": "space-between",
+    }
+    return mapping.get(value or "")
+
+
+def _map_counter_axis(value: str | None) -> str | None:
+    mapping = {
+        "MIN": "flex-start",
+        "CENTER": "center",
+        "MAX": "flex-end",
+        "BASELINE": "baseline",
+    }
+    return mapping.get(value or "")
+
+
+def _node_css_properties(node: dict) -> dict[str, str]:
+    css: dict[str, str] = {}
+
+    layout_mode = node.get("layoutMode")
+    if layout_mode == "HORIZONTAL":
+        css["display"] = "flex"
+        css["flex-direction"] = "row"
+    elif layout_mode == "VERTICAL":
+        css["display"] = "flex"
+        css["flex-direction"] = "column"
+
+    justify_content = _map_primary_axis(node.get("primaryAxisAlignItems"))
+    if justify_content:
+        css["justify-content"] = justify_content
+
+    align_items = _map_counter_axis(node.get("counterAxisAlignItems"))
+    if align_items:
+        css["align-items"] = align_items
+
+    item_spacing = _fmt_px(node.get("itemSpacing"))
+    if item_spacing:
+        css["gap"] = item_spacing
+
+    paddings = [
+        _fmt_px(node.get("paddingTop")) or "0px",
+        _fmt_px(node.get("paddingRight")) or "0px",
+        _fmt_px(node.get("paddingBottom")) or "0px",
+        _fmt_px(node.get("paddingLeft")) or "0px",
+    ]
+    if any(value != "0px" for value in paddings):
+        css["padding"] = " ".join(paddings)
+
+    bounds = node.get("absoluteBoundingBox", {})
+    width = _fmt_px(bounds.get("width"))
+    height = _fmt_px(bounds.get("height"))
+    if width:
+        css["width"] = width
+    if height:
+        css["height"] = height
+
+    if node.get("layoutGrow") == 1:
+        css["flex"] = "1 1 0%"
+
+    layout_align = node.get("layoutAlign")
+    if layout_align == "STRETCH":
+        css["align-self"] = "stretch"
+
+    if isinstance(node.get("opacity"), (int, float)) and node.get("opacity") != 1:
+        css["opacity"] = str(node["opacity"])
+
+    if node.get("clipsContent"):
+        css["overflow"] = "hidden"
+
+    css.update(_fills_to_css(node.get("fills"), is_text=node.get("type") == "TEXT"))
+    css.update(_strokes_to_css(node.get("strokes"), node.get("strokeWeight"), node.get("strokeAlign")))
+
+    box_shadow = _effects_to_box_shadow(node.get("effects"))
+    if box_shadow:
+        css["box-shadow"] = box_shadow
+
+    corner_radius = node.get("cornerRadius")
+    if isinstance(corner_radius, (int, float)):
+        css["border-radius"] = _fmt_px(corner_radius) or "0px"
+    elif isinstance(node.get("rectangleCornerRadii"), list):
+        radii = [(_fmt_px(v) or "0px") for v in node["rectangleCornerRadii"]]
+        if any(v != "0px" for v in radii):
+            css["border-radius"] = " ".join(radii)
+
+    if node.get("type") == "TEXT":
+        style = node.get("style", {})
+        font_family = style.get("fontFamily")
+        if font_family:
+            css["font-family"] = font_family
+        font_size = _fmt_px(style.get("fontSize"))
+        if font_size:
+            css["font-size"] = font_size
+        if style.get("fontWeight"):
+            css["font-weight"] = str(style["fontWeight"])
+        line_height = _fmt_px(style.get("lineHeightPx"))
+        if line_height:
+            css["line-height"] = line_height
+        letter_spacing = _fmt_px(style.get("letterSpacing"))
+        if letter_spacing and letter_spacing != "0px":
+            css["letter-spacing"] = letter_spacing
+        text_align = style.get("textAlignHorizontal")
+        if text_align:
+            css["text-align"] = text_align.lower()
+        text_decoration = style.get("textDecoration")
+        if text_decoration and text_decoration != "NONE":
+            css["text-decoration"] = text_decoration.lower().replace("_", "-")
+
+    return css
+
+
+def _css_dict_to_text(css: dict[str, str]) -> str:
+    return "\n".join(f"{key}: {value};" for key, value in css.items())
+
+
+def _build_llm_node(node: dict) -> dict:
+    css = _node_css_properties(node)
+    result = {
+        "id": node.get("id"),
+        "name": node.get("name"),
+        "type": node.get("type"),
+        "text": node.get("characters"),
+        "css": css,
+        "css_text": _css_dict_to_text(css),
+    }
+
+    children = node.get("children", [])
+    if children:
+        result["children"] = [_build_llm_node(child) for child in children]
+
+    return {k: v for k, v in result.items() if v not in (None, "", [], {})}
+
+
+def build_llm_input_file(
+    *,
+    figma_url: str,
+    file_key: str,
+    node_id: str,
+    design_json: dict,
+    tokens: dict | None,
+    styles: dict | None,
+    extra_prompt: str,
+) -> dict:
+    """整理成單一檔案給外部 LLM 使用。"""
+    root_node = next(iter(design_json.values()), {})
+    llm_tree = _build_llm_node(root_node) if root_node else {}
+
+    return {
+        "version": "1.0",
+        "purpose": "Provide a single structured file for an LLM to convert a Figma design into HTML.",
+        "recommended_prompt": (
+            "Please read this structured Figma design file together with the screenshot. "
+            "Generate a complete single-file HTML page that reproduces the design precisely. "
+            "Preserve hierarchy, exact text, spacing, typography, border radius, colors, and shadows. "
+            "Prefer the provided CSS properties and tokens over guessing. "
+            "Output only HTML."
+            + (f" Additional requirements: {extra_prompt}" if extra_prompt else "")
+        ),
+        "source": {
+            "figma_url": figma_url,
+            "file_key": file_key,
+            "node_id": node_id,
+        },
+        "tokens": tokens or {},
+        "styles": styles or {},
+        "design_tree": llm_tree,
+        "raw_design_summary": design_json,
+    }
+
+
 # ---------------------------------------------------------------------------
 # LLM API（OpenAI Compatible, 多模態）
 # ---------------------------------------------------------------------------
@@ -248,14 +660,14 @@ def _post_json(url: str, payload: dict, timeout: int = 120) -> dict:
         "Content-Type": "application/json",
         "Authorization": f"Bearer {LLM_API_KEY}",
     }
-    data = json.dumps(payload).encode()
-    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode())
-    except urllib.error.HTTPError as e:
-        body = e.read().decode() if e.fp else ""
-        raise RuntimeError(f"LLM API {e.code}: {body}") from e
+    return _request_json(
+        "llm",
+        url,
+        headers=headers,
+        data=payload,
+        method="POST",
+        timeout=timeout,
+    )
 
 
 def _to_responses_content(user_content: list[dict]) -> list[dict]:
@@ -402,6 +814,7 @@ Rules:
 def build_user_content(
     design_json: dict,
     tokens: dict | None,
+    styles: dict | None,
     screenshot_bytes: bytes | None,
     extra_prompt: str = "",
 ) -> list[dict]:
@@ -451,7 +864,20 @@ def build_user_content(
             ),
         })
 
-    # 4. 額外指示
+    # 4. Styles（如果有）
+    if styles:
+        styles_str = json.dumps(styles, ensure_ascii=False, indent=2)
+        parts.append({
+            "type": "text",
+            "text": (
+                "## Published Styles\n\n"
+                "These are style definitions fetched from Figma as JSON. "
+                "Use them to preserve naming and design-system intent when relevant.\n\n"
+                f"```json\n{styles_str}\n```\n\n"
+            ),
+        })
+
+    # 5. 額外指示
     if extra_prompt:
         parts.append({
             "type": "text",
@@ -505,6 +931,7 @@ def main():
         epilog="""
 環境變數設定範例:
   export FIGMA_TOKEN="figd_xxxxx"
+  export FIGMA_PROXY="http://proxy.company:8080"  # 可選
   export LLM_BASE_URL="http://10.0.1.50:8000/v1"
   export LLM_API_KEY="your-api-key"
   export LLM_MODEL="gpt-4o"
@@ -515,6 +942,8 @@ def main():
   python figma_to_html.py "..." -o card.html --stack tailwind
   python figma_to_html.py "..." --extra-prompt "使用繁體中文"
   python figma_to_html.py "..." --no-screenshot
+  python figma_to_html.py "..." --json-only
+  python figma_to_html.py "..." --prepare-only --llm-input-output design_for_llm.json
   python figma_to_html.py "..." --llm-api-style responses
   python figma_to_html.py "..." --save-json  # 同時儲存中間 JSON 檔案
         """,
@@ -526,6 +955,12 @@ def main():
     parser.add_argument("--extra-prompt", default="", help="額外的生成指示（例如：使用繁體中文）")
     parser.add_argument("--no-screenshot", action="store_true", help="跳過截圖匯出（節省 API 呼叫）")
     parser.add_argument("--no-tokens", action="store_true", help="跳過 Design Tokens 提取")
+    parser.add_argument("--json-only", action="store_true",
+                        help="僅使用 Figma JSON（nodes / variables / styles），不下載截圖")
+    parser.add_argument("--prepare-only", action="store_true",
+                        help="只提取與整理 Figma 資料，不呼叫內部 LLM 生成 HTML")
+    parser.add_argument("--llm-input-output", default="",
+                        help="輸出單一給 LLM 使用的 JSON 檔案路徑")
     parser.add_argument("--save-json", action="store_true", help="同時儲存提取的 Figma JSON 到 output 同目錄")
     parser.add_argument("--max-tokens", type=int, default=16000, help="LLM 最大生成 token 數（預設 16000）")
     parser.add_argument("--llm-api-style", choices=["chat", "responses"], default=LLM_API_STYLE,
@@ -537,10 +972,11 @@ def main():
     errors = []
     if not FIGMA_TOKEN:
         errors.append("FIGMA_TOKEN 未設定。請執行: export FIGMA_TOKEN='figd_xxxxx'")
-    if not LLM_BASE_URL:
-        errors.append("LLM_BASE_URL 未設定。請執行: export LLM_BASE_URL='http://your-llm-server/v1'")
-    if not LLM_API_KEY:
-        errors.append("LLM_API_KEY 未設定。請執行: export LLM_API_KEY='your-key'")
+    if not args.prepare_only:
+        if not LLM_BASE_URL:
+            errors.append("LLM_BASE_URL 未設定。請執行: export LLM_BASE_URL='http://your-llm-server/v1'")
+        if not LLM_API_KEY:
+            errors.append("LLM_API_KEY 未設定。請執行: export LLM_API_KEY='your-key'")
     if errors:
         for e in errors:
             print(f"[錯誤] {e}", file=sys.stderr)
@@ -565,6 +1001,12 @@ def main():
     print(f"[Info] Stack:    {args.stack}")
     print(f"[Info] Model:    {LLM_MODEL}")
     print(f"[Info] LLM API:  {LLM_API_STYLE}")
+    print(f"[Info] Mode:     {'prepare-only' if args.prepare_only else 'generate-html'}")
+    print(f"[Info] Figma API: {FIGMA_API}")
+    if FIGMA_PROXY:
+        print(f"[Info] Figma Proxy: {FIGMA_PROXY}")
+    if LLM_PROXY:
+        print(f"[Info] LLM Proxy:   {LLM_PROXY}")
     print()
 
     # --- Step 1: Figma REST API 提取設計數據 ---
@@ -573,6 +1015,7 @@ def main():
 
     # --- Step 2: 提取 Design Tokens ---
     tokens = None
+    variables_resp: dict = {}
     if not args.no_tokens:
         variables_resp = fetch_variables(file_key)
         if variables_resp:
@@ -580,9 +1023,25 @@ def main():
             if tokens:
                 print(f"[Figma] 取得 {sum(len(v) for v in tokens.values())} 個 tokens")
 
+    # --- Step 2.5: 提取 Styles ---
+    styles_resp = fetch_styles(file_key)
+    styles = extract_styles_summary(styles_resp)
+    if styles:
+        print(f"[Figma] 取得 {sum(len(v) for v in styles.values())} 個 styles")
+
+    llm_input = build_llm_input_file(
+        figma_url=args.figma_url,
+        file_key=file_key,
+        node_id=node_id,
+        design_json=design_json,
+        tokens=tokens,
+        styles=styles,
+        extra_prompt=args.extra_prompt,
+    )
+
     # --- Step 3: 匯出截圖 ---
     screenshot_bytes = None
-    if not args.no_screenshot:
+    if not args.no_screenshot and not args.json_only:
         img_url = fetch_image_url(file_key, node_id, fmt="png", scale=2)
         if img_url:
             screenshot_bytes = download_image(img_url)
@@ -591,19 +1050,45 @@ def main():
     # --- Step 3.5: 儲存中間檔案（可選）---
     if args.save_json:
         out_dir = Path(args.output).parent
+        out_dir.mkdir(parents=True, exist_ok=True)
         with open(out_dir / "figma_design.json", "w", encoding="utf-8") as f:
             json.dump(design_json, f, ensure_ascii=False, indent=2)
+        with open(out_dir / "figma_nodes_raw.json", "w", encoding="utf-8") as f:
+            json.dump(nodes_resp, f, ensure_ascii=False, indent=2)
         if tokens:
             with open(out_dir / "figma_tokens.json", "w", encoding="utf-8") as f:
                 json.dump(tokens, f, ensure_ascii=False, indent=2)
+        if not args.no_tokens and variables_resp:
+            with open(out_dir / "figma_variables_raw.json", "w", encoding="utf-8") as f:
+                json.dump(variables_resp, f, ensure_ascii=False, indent=2)
+        if styles:
+            with open(out_dir / "figma_styles.json", "w", encoding="utf-8") as f:
+                json.dump(styles, f, ensure_ascii=False, indent=2)
+        if styles_resp:
+            with open(out_dir / "figma_styles_raw.json", "w", encoding="utf-8") as f:
+                json.dump(styles_resp, f, ensure_ascii=False, indent=2)
         if screenshot_bytes:
             with open(out_dir / "figma_screenshot.png", "wb") as f:
                 f.write(screenshot_bytes)
         print(f"[Info] 中間檔案已儲存到 {out_dir}/")
 
+    llm_input_path = args.llm_input_output.strip()
+    if not llm_input_path:
+        output_base = Path(args.output)
+        llm_input_path = str(output_base.with_suffix(".llm_input.json"))
+
+    llm_input_file = Path(llm_input_path)
+    llm_input_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(llm_input_file, "w", encoding="utf-8") as f:
+        json.dump(llm_input, f, ensure_ascii=False, indent=2)
+    print(f"[完成] LLM 輸入檔已儲存到: {llm_input_file}")
+
+    if args.prepare_only:
+        return
+
     # --- Step 4: 呼叫 LLM 生成 HTML ---
     system_prompt = SYSTEM_PROMPT_TAILWIND if args.stack == "tailwind" else SYSTEM_PROMPT_INLINE
-    user_content = build_user_content(design_json, tokens, screenshot_bytes, args.extra_prompt)
+    user_content = build_user_content(design_json, tokens, styles, screenshot_bytes, args.extra_prompt)
 
     response = call_llm(
         system_prompt=system_prompt,
