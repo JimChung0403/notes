@@ -10,27 +10,27 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: Checkout
+      - name: Checkout 程式碼
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: 設定 Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      - name: 安裝相依套件
         run: npm ci
 
-      - name: Install Playwright browsers
+      - name: 安裝 Playwright 瀏覽器
         run: npx playwright install --with-deps
 
-      - name: Start app
+      - name: 啟動應用
         run: |
           npm run dev > app.log 2>&1 &
           echo $! > app.pid
 
-      - name: Wait for app
+      - name: 等待健康檢查
         run: |
           for i in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:3000 >/dev/null; then
@@ -38,16 +38,16 @@ jobs:
             fi
             sleep 2
           done
-          echo "App did not become healthy in time"
+          echo "應用未在預期時間內就緒"
           exit 1
 
-      - name: Run autonomous repair loop
+      - name: 執行自動修復迴圈
         env:
           AI_TOOL: qwen
           MAX_ROUNDS: 3
         run: bash AI-E2E-自動修復-可行性報告/templates/run-autofix-loop.sh
 
-      - name: Upload artifacts
+      - name: 上傳工件
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -58,7 +58,7 @@ jobs:
             test-results
             app.log
 
-      - name: Stop app
+      - name: 停止應用
         if: always()
         run: |
           if [ -f app.pid ]; then
