@@ -9,8 +9,8 @@
 - `03-導入清單.md`：導入前需要確認的環境、邊界、停止條件
 - `templates/run-autofix-loop.sh`：自動修復迴圈腳本模板
 - `templates/github-actions-e2e-autofix.yml`：CI 工作流模板
-- `templates/qwen-autofix-prompt.md`：給 Qwen Code CLI 的固定 prompt 模板
-- `templates/opencode-autofix-prompt.md`：給 OpenCode CLI 的固定 prompt 模板
+- `templates/qwen-autofix-prompt.md`：給 Qwen Code CLI 的固定中文 prompt 模板
+- `templates/opencode-autofix-prompt.md`：給 OpenCode CLI 的固定中文 prompt 模板
 - `templates/triage-report-template.md`：失敗後的標準報告模板
 
 建議使用方式：
