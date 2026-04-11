@@ -6,6 +6,8 @@
 - `.mcp.json.example`
 - `opencode.json.example`
 - `tools/playwright-mcp.config.json.example`
+- `tools/playwright-mcp.config.proxy-server.json.example`
+- `tools/playwright-mcp.config.proxy-pac.json.example`
 
 ## 使用順序
 
@@ -22,6 +24,12 @@
 
 - `@playwright/mcp` 的 `cli.js` 實際路徑
 - `executablePath` 的實際 Chrome/Chromium 路徑
+
+如果你公司是靠 proxy 才能對外，另外改：
+
+- `proxy.server`
+- `proxy.bypass`
+- 或 `--proxy-pac-url`
 
 ## 建議
 
