@@ -1,0 +1,29 @@
+# Playwright MCP SOP Kit
+
+這個資料夾整理了在封閉網路環境下，讓 AI CLI 與本機 Chrome/Chromium 協作所需的最小檔案：
+
+- `Playwright-MCP-封閉網路-AI協作Chrome-SOP.md`
+- `.mcp.json.example`
+- `opencode.json.example`
+- `tools/playwright-mcp.config.json.example`
+
+## 使用順序
+
+1. 先看 `Playwright-MCP-封閉網路-AI協作Chrome-SOP.md`
+2. 確認你本機 `@playwright/mcp` 的實際安裝位置
+3. 把範本檔改成你要的正式檔名與路徑
+4. 依你要用的 CLI 選擇：
+   - `Claude Code` → `.mcp.json`
+   - `OpenCode` → `opencode.json`
+
+## 你要改的地方
+
+至少要改這兩個值：
+
+- `@playwright/mcp` 的 `cli.js` 實際路徑
+- `executablePath` 的實際 Chrome/Chromium 路徑
+
+## 建議
+
+- 要保留登入狀態時，用固定 `userDataDir`
+- 要做乾淨測試時，改一個新的 `userDataDir`，或再做一份 isolated 專用設定

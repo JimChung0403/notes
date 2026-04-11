@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "playwright-local": {
+      "command": "node",
+      "args": [
+        "./node_modules/@playwright/mcp/cli.js",
+        "--config",
+        "./tools/playwright-mcp.config.json"
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "userDataDir": "./.cache/playwright-mcp-profile",
+    "launchOptions": {
+      "headless": false,
+      "executablePath": "/home/mcchungp/Documents/project/tool/playwright2/ms-playwright/chromium-1194/chrome-linux/chrome"
+    },
+    "contextOptions": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      }
+    }
+  }
+}
