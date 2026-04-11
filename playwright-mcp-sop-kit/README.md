@@ -31,6 +31,35 @@
 - `proxy.bypass`
 - 或 `--proxy-pac-url`
 
+## 如果 `cli.js` 路徑不存在
+
+先檢查：
+
+```bash
+npm ls @playwright/mcp --depth=0
+find . -path '*/node_modules/@playwright/mcp/cli.js' 2>/dev/null
+```
+
+如果沒有，再安裝。
+
+先安裝 MCP server 套件，不要只安裝 `playwright`：
+
+```bash
+npm install @playwright/mcp
+```
+
+如果這個 repo 也要寫一般 Playwright 腳本，可以：
+
+```bash
+npm install playwright @playwright/mcp
+```
+
+安裝後再確認：
+
+```bash
+find . -path '*/node_modules/@playwright/mcp/cli.js' 2>/dev/null
+```
+
 ## 建議
 
 - 要保留登入狀態時，用固定 `userDataDir`
