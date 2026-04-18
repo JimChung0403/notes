@@ -7,6 +7,12 @@
 - `codex_AI_dev.md`
   - 主文件
   - 說明整體方法、角色分工、流程、升級點
+- `INSTALL_CLAUDE_CODE.md`
+  - `Claude Code` 的封閉網路安裝與驗證教學
+- `INSTALL_OPENCODE.md`
+  - `opencode` 的封閉網路安裝與驗證教學
+- `INSTALL_QWEN_CODE.md`
+  - `Qwen Code` 的封閉網路安裝與驗證教學
 - `.claude/commands/run-prd.md`
   - PRD-driven 主入口
 - `.claude/commands/coordinator.md`

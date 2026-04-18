@@ -242,7 +242,93 @@ claude
 
 ---
 
-## 7. 建議順手安裝的本地工具
+## 7. 安裝後怎麼驗證有沒有 work
+
+至少做這 5 步：
+
+### Step 1. 驗證 CLI 已安裝
+
+```text
+claude --version
+```
+
+如果這一步找不到指令，代表：
+
+- `npm install -g` 沒成功
+- 或全域 npm bin path 沒進 PATH
+
+### Step 2. 驗證基本診斷
+
+```text
+claude doctor
+```
+
+你要確認：
+
+- CLI 本體可執行
+- Node / npm 環境正常
+- 沒有明顯 proxy 或憑證錯誤
+
+### Step 3. 驗證登入流程可走通
+
+```text
+claude
+```
+
+進去之後至少確認：
+
+- 能進入互動介面
+- 能看到登入或 session 畫面
+- 不會在一開始就卡在網路錯誤
+
+### Step 4. 驗證模型服務可達
+
+登入完成後，執行一個最小測試，例如：
+
+```text
+請用一句話回答：Claude Code 連線正常。
+```
+
+如果能正常回覆，就代表：
+
+- CLI 可用
+- authentication 可用
+- proxy / 白名單大致可用
+
+### Step 5. 驗證 `run-prd` 套件能接上
+
+進到專案目錄後，確認：
+
+```text
+/help
+```
+
+然後檢查你 repo 裡的 `.claude/commands/` 是否已放好，至少要有：
+
+- `.claude/commands/run-prd.md`
+- `.claude/commands/coordinator.md`
+- `.claude/commands/impact.md`
+- `.claude/commands/verify-local.md`
+
+如果 command 可見，再執行一次最小檢查：
+
+```text
+/coordinator 我目前只是要確認 command 有沒有載入
+```
+
+### 最小驗收標準
+
+滿足以下條件，就可以算安裝成功：
+
+- `claude --version` 正常
+- `claude doctor` 正常
+- 可以登入
+- 可以得到一則正常模型回覆
+- 可以在專案裡看到並執行 `.claude/commands/*`
+
+---
+
+## 8. 建議順手安裝的本地工具
 
 你這套 `run-prd` 會用到：
 
@@ -260,7 +346,7 @@ git --version
 
 ---
 
-## 8. 建議放進 repo 的 command
+## 9. 建議放進 repo 的 command
 
 如果要配合這份 `run-prd` 套件，請把這些檔案放到專案：
 
@@ -277,7 +363,7 @@ git --version
 
 ---
 
-## 9. 常見問題
+## 10. 常見問題
 
 ### Q1. 能不能完全離線使用？
 
@@ -295,7 +381,7 @@ git --version
 
 ---
 
-## 10. 內部落地建議
+## 11. 內部落地建議
 
 如果你要帶去公司，我建議先確認這 4 件事：
 
@@ -304,7 +390,7 @@ git --version
 3. 公司是否允許 npm tarball 離線安裝
 4. 公司是否能接受把 `.claude/commands/` 放進 repo
 
-## 11. 你公司目前假設的推薦落地
+## 12. 你公司目前假設的推薦落地
 
 依你目前提供的條件：
 

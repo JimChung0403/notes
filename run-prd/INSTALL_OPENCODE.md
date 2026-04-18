@@ -229,7 +229,82 @@ $env:NO_PROXY="localhost,127.0.0.1,.company.local"
 
 ---
 
-## 8. 建議搭配的本地工具
+## 8. 安裝後怎麼驗證有沒有 work
+
+至少做這 5 步：
+
+### Step 1. 驗證 binary 已安裝
+
+```text
+opencode --help
+```
+
+如果這一步失敗，通常代表：
+
+- binary 沒放進 PATH
+- 檔案沒有執行權限
+- Windows PowerShell 沒找到正確路徑
+
+### Step 2. 驗證版本資訊
+
+如果你們打包時有保存版本資訊，請再跑一次：
+
+```text
+opencode --version
+```
+
+若該版本不支援 `--version`，至少保留外網打包時記錄的版本與 SHA256。
+
+### Step 3. 驗證設定檔或環境變數已生效
+
+至少確認：
+
+- provider 設定已放進 `.opencode.json` 或環境變數
+- 若走 proxy，`HTTP_PROXY` / `HTTPS_PROXY` 已設定
+- 若走公司 gateway，endpoint 與 auth 已填好
+
+### Step 4. 驗證模型連線是否可用
+
+啟動 `opencode` 後，做一個最小測試，例如：
+
+```text
+請只回一句：opencode 連線正常。
+```
+
+如果可以正常回覆，就代表：
+
+- binary 可執行
+- provider 設定正確
+- proxy / gateway / 白名單 大致可用
+
+### Step 5. 驗證 `run-prd` 流程可配合
+
+再確認這些本地工具存在：
+
+```text
+rg --version
+mvn -v
+git --version
+```
+
+因為 `opencode` 若要配合你這套 workflow，還是需要：
+
+- `rg`
+- `mvn`
+- `git`
+
+### 最小驗收標準
+
+滿足以下條件，就可以算安裝成功：
+
+- `opencode --help` 正常
+- 能辨識 provider 設定
+- 能得到一則正常模型回覆
+- `rg` / `mvn` / `git` 都可用
+
+---
+
+## 9. 建議搭配的本地工具
 
 若你要配合 `run-prd` 套件，內網還應至少有：
 
@@ -247,7 +322,7 @@ git --version
 
 ---
 
-## 9. 建議如何放進公司環境
+## 10. 建議如何放進公司環境
 
 最穩的方式是：
 
@@ -259,7 +334,7 @@ git --version
 
 ---
 
-## 10. 常見問題
+## 11. 常見問題
 
 ### Q1. 為什麼不直接用 install script？
 
@@ -275,7 +350,7 @@ AI 能力是否可用，仍取決於模型連線方式。
 短期可行。  
 長期則要再評估專案已封存這件事。
 
-## 11. 你公司目前假設的推薦落地
+## 12. 你公司目前假設的推薦落地
 
 依你目前提供的條件：
 
