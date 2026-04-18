@@ -1,330 +1,110 @@
-# Qwen Code 封閉網路安裝教學
+# Qwen Code 已安裝後：GSD / Superpowers 可行性說明
 
-## 0. 先講結論
+這份文件現在假設：
 
-`Qwen Code` 可以做成 **離線安裝**，但是否能在公司內網正常使用，取決於：
+- `Qwen Code` 本體已經安裝完成
+- 你想知道：在公司環境下，能不能再裝 `GSD` / `Superpowers`
 
-- 你是用 `Qwen OAuth` 還是 `OpenAI-compatible API`
-- 公司是否允許對外連線
-- 是否可走 proxy
-- 是否已有公司內部 LLM gateway
+這份文件重點不是一般安裝，而是：
 
-如果公司網路：
-
-- **完全不能對外**
-
-那通常只能：
-
-- 走公司內部 gateway
-- 或只完成安裝，不做實際 AI 使用
-
-如果公司網路：
-
-- **可走 proxy / 白名單**
-
-那 `Qwen Code` 可以納入這套 `run-prd` workflow。
+- 現在有沒有官方支援
+- 如果沒有，該怎麼決策
 
 ---
 
-## 1. 適用情境
+## 1. 先講結論
 
-這份文件適用於：
+### `GSD`
 
-- 你要先在外網下載 `Qwen Code`
-- 再帶進公司內網
-- 公司機器以 `Linux` 與 `Windows PowerShell` 為主
-- 你希望它能和 `run-prd` 的本地 workflow 搭配
+我目前沒有找到 `GSD` 官方 README 對 `Qwen Code` 的正式安裝說明。
 
----
+### `Superpowers`
 
-## 2. 你需要準備什麼
+我目前也沒有看到 `Superpowers` 官方 README 把 `Qwen Code` 列為正式支援平台。
 
-### 外網機器
+所以對 `Qwen Code` 而言：
 
-需要：
-
-- Node.js 20+
-- npm
-- 可連外網
-
-### 內網機器
-
-需要：
-
-- Node.js 20+
-- npm
-- shell 環境
-- 至少能透過 proxy / 白名單 / gateway 存取模型服務
-
-支援建議：
-
-- `Linux`
-- `Windows PowerShell`
+- `GSD`：**目前不建議當成已驗證的官方路徑**
+- `Superpowers`：**目前也不建議當成已驗證的官方路徑**
 
 ---
 
-## 3. 外網機器準備安裝包
+## 2. 這代表什麼
 
-### Step 1
+如果你公司要的是：
 
-建立暫存目錄。
+- 可交接
+- 可重複
+- 可寫進標準文件
 
-Linux:
+那我不建議你把：
 
-```bash
-mkdir -p ~/tmp/qwen-code-offline
-cd ~/tmp/qwen-code-offline
-```
+- `Qwen Code + GSD`
+- `Qwen Code + Superpowers`
 
-PowerShell:
-
-```powershell
-New-Item -ItemType Directory -Force "$HOME\\tmp\\qwen-code-offline" | Out-Null
-Set-Location "$HOME\\tmp\\qwen-code-offline"
-```
-
-### Step 2
-
-下載 npm 套件：
-
-```text
-npm pack @qwen-code/qwen-code@latest
-```
-
-### Step 3
-
-建議一起打包帶進內網：
-
-- `@qwen-code/qwen-code` 的 `.tgz`
-- Node.js 安裝包
-- proxy / CA / gateway 設定說明
-
-建議再保存 SHA256：
-
-Linux:
-
-```bash
-shasum -a 256 *.tgz > SHA256SUMS.txt
-```
-
-PowerShell:
-
-```powershell
-Get-FileHash .\*.tgz -Algorithm SHA256 | Format-Table -AutoSize | Out-File .\SHA256SUMS.txt
-```
+當成第一版公司標準。
 
 ---
 
-## 4. 內網機器安裝
+## 3. 那 Qwen Code 可以做什麼
 
-### Step 1
+如果公司已經裝好 `Qwen Code`，它仍然可以做這些事：
 
-先確認 Node.js 版本。
+- 跑你們 repo 內的流程文件
+- 依照 `run-prd` 的說明做本地 workflow
+- 配合：
+  - `feature brief`
+  - `rg`
+  - `mvn test-compile`
+  - targeted tests
+  - review
 
-```text
-node -v
-npm -v
-```
+也就是說：
 
-### Step 2
-
-進到你帶進來的目錄。
-
-Linux:
-
-```bash
-cd /path/to/qwen-code-offline
-```
-
-PowerShell:
-
-```powershell
-Set-Location "C:\path\to\qwen-code-offline"
-```
-
-### Step 3
-
-安裝本地 tarball：
-
-```text
-npm install -g ./qwen-code-qwen-code-*.tgz
-```
-
-### Step 4
-
-確認：
-
-```text
-qwen --version
-qwen --help
-```
+你仍然可以把 `Qwen Code` 當成一個 terminal coding agent 使用，  
+只是不要把 `GSD` / `Superpowers` 當成它的官方擴充方案。
 
 ---
 
-## 5. 內網使用前設定
+## 4. 公司版建議
 
-### 如果公司走 HTTP/HTTPS proxy
+### 如果你要穩定標準
 
-Linux:
+建議：
 
-```bash
-export HTTP_PROXY=http://proxy.company.local:port
-export HTTPS_PROXY=http://proxy.company.local:port
-export NO_PROXY=localhost,127.0.0.1,.company.local
-```
+- `Claude Code + GSD`
+- `OpenCode + GSD`
+- `OpenCode + Superpowers`
 
-PowerShell:
+### 如果你要讓 Qwen Code 也能加入
 
-```powershell
-$env:HTTP_PROXY="http://proxy.company.local:port"
-$env:HTTPS_PROXY="http://proxy.company.local:port"
-$env:NO_PROXY="localhost,127.0.0.1,.company.local"
-```
+建議把它定位成：
 
-### 驗證方式選擇
+- 備用 agent
+- 平行驗證 agent
+- 第二模型 reviewer
 
-`Qwen Code` 有兩種常見做法：
+而不是：
 
-#### 方式 A：`Qwen OAuth`
-
-適合：
-
-- 可打開登入頁
-- 公司允許 `qwen.ai` 相關流量
-
-啟動後可透過 `/auth` 完成登入。
-
-#### 方式 B：`OpenAI-compatible API`
-
-適合：
-
-- 公司已有內部 gateway
-- 或你們已有統一的 API endpoint
-
-例如可設定：
-
-Linux:
-
-```bash
-export OPENAI_API_KEY=...
-export OPENAI_BASE_URL=...
-export OPENAI_MODEL=...
-```
-
-PowerShell:
-
-```powershell
-$env:OPENAI_API_KEY="..."
-$env:OPENAI_BASE_URL="..."
-$env:OPENAI_MODEL="..."
-```
+- `GSD` / `Superpowers` 的正式承載平台
 
 ---
 
-## 6. 安裝後怎麼驗證有沒有 work
+## 5. 最務實的做法
 
-至少做這 6 步：
+如果公司裡一定要讓 `Qwen Code` 參與這套流程，最穩的方式是：
 
-### Step 1. 驗證 CLI 已安裝
+1. `GSD` / `Superpowers` 先由 `Claude Code` 或 `OpenCode` 承載
+2. `Qwen Code` 只拿來做：
+   - 第二模型 review
+   - 需求理解交叉檢查
+   - 測試案例補充
 
-```text
-qwen --version
-qwen --help
-```
-
-### Step 2. 驗證互動模式能啟動
-
-```text
-qwen
-```
-
-至少要確認：
-
-- 可以進入互動介面
-- 不會一啟動就報 network / auth 錯誤
-
-### Step 3. 驗證 auth 或 API 設定可用
-
-如果走 `Qwen OAuth`：
-
-- 進互動模式後執行 `/auth`
-- 確認登入流程能完成
-
-如果走 `OpenAI-compatible API`：
-
-- 確認環境變數或 gateway 設定已生效
-
-### Step 4. 驗證模型回覆正常
-
-執行一個最小測試，例如：
-
-```text
-請只回一句：Qwen Code 連線正常。
-```
-
-### Step 5. 驗證本地工具鏈
-
-```text
-rg --version
-mvn -v
-git --version
-```
-
-### Step 6. 驗證能配合 `run-prd` 工作流
-
-如果你準備在公司 repo 用這套流程，再確認：
-
-- `.claude/commands/run-prd.md`
-- `.claude/commands/coordinator.md`
-- `.claude/commands/impact.md`
-- `.claude/commands/verify-local.md`
-
-都已放進專案。
-
-### 最小驗收標準
-
-滿足以下條件，就可以算可用：
-
-- `qwen --version` 正常
-- `qwen` 可啟動
-- auth 或 API 設定可用
-- 能得到一則正常模型回覆
-- `rg` / `mvn` / `git` 都可用
+這樣你不會把整套流程綁在一條未明確官方支援的路徑上。
 
 ---
 
-## 7. 建議搭配的本地工具
+## 6. 一句話版
 
-若你要配合 `run-prd` 套件，內網至少還應有：
-
-- `rg`
-- `mvn`
-- `git`
-
----
-
-## 8. 常見問題
-
-### Q1. `Qwen Code` 能完全離線使用嗎？
-
-通常不能。  
-安裝可離線搬運，但實際 AI 功能仍需要 auth 或模型 API。
-
-### Q2. 公司內網只能走 proxy，可以用嗎？
-
-可以，但你要先驗證：
-
-- proxy 可用
-- auth 流程可用
-- 或 API endpoint 可用
-
-### Q3. 適合拿來配 `run-prd` 嗎？
-
-可以。  
-只要它能在公司環境裡穩定完成：
-
-- 啟動
-- auth / API
-- 基本回覆
-
-就能和 `run-prd` 的本地 workflow 搭配。
+`Qwen Code` 可以用，但目前我不建議你把它當成 `GSD` / `Superpowers` 的正式安裝平台。  
+公司標準路徑應該先放在 `Claude Code` 或 `OpenCode`。

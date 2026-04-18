@@ -1,366 +1,171 @@
-# opencode 封閉網路安裝教學
+# OpenCode 已安裝後：GSD / Superpowers 安裝教學
 
-## 0. 先講結論
+這份文件現在假設：
 
-`opencode` 可以比較容易做成 **離線安裝**，因為它本身是 CLI 工具。  
-但它是否能在你公司內網正常使用，仍取決於：
+- `OpenCode` 本體已經安裝完成
+- 公司不能直接用外部 marketplace
+- 但公司可以使用內部 Git / 內部鏡像 repo
 
-- 你選的模型提供者
-- 公司是否允許對該模型提供者連線
-- 或公司是否有內部模型 gateway
+這份文件只回答兩件事：
 
-另外要注意：
-
-- `opencode-ai/opencode` 官方 GitHub repo 已經封存
-- 專案後續已移轉到 `Crush`
-
-如果你公司要追求長期可維護性，之後應評估是否直接改用新專案。
+1. 怎麼在 `OpenCode` 裝 `GSD`
+2. 怎麼在沒有 marketplace 的情況下裝 `Superpowers`
 
 ---
 
-## 1. 適用情境
+## 1. 先講結論
 
-這份文件適用於：
+### `GSD`
 
-- 你要先在外網下載 `opencode`
-- 再帶進公司內網
-- 並透過公司允許的模型連線方式使用
-- 公司機器以 `Linux` 與 `Windows PowerShell` 為主
+`GSD` 官方安裝器支援 `OpenCode`，可以直接裝到：
 
----
+- `~/.config/opencode/`
 
-## 2. 安裝方式選擇
+### `Superpowers`
 
-`opencode` 官方常見安裝方式有：
+`Superpowers` 官方 README 對 `OpenCode` 的說法是：
 
-- install script
-- Homebrew
-- Go install
+- 讓 `OpenCode` 去抓 `https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md`
+- 再照裡面的步驟做
 
-對封閉網路最實際的做法是：
+所以如果公司不能直接抓外網，你最合理的做法是：
 
-- **外網先編譯或下載 binary**
-- **內網直接放可執行檔**
-
-不要依賴：
-
-- install script 即時下載
-- 內網直接 `go install`
+- 先把 `obra/superpowers` 做成公司內部鏡像
+- 再改成讀公司內部鏡像裡的 `.opencode/INSTALL.md`
 
 ---
 
-## 3. 外網機器準備 binary
+## 2. 安裝 GSD
 
-### 方式 A：直接下載 release binary
-
-如果你們公司允許這種方式，外網機器先下載對應平台 binary。
-
-下載後請一起保存：
-
-- binary
-- 版本資訊
-- SHA256
-
-### 方式 B：自己編譯
-
-如果你想更可控：
-
-Linux:
+執行：
 
 ```bash
-git clone <opencode repo>
-cd opencode
-go build -o opencode .
+npx get-shit-done-cc --opencode --global
 ```
 
-PowerShell:
+官方安裝器會把內容裝到：
 
-```powershell
-git clone <opencode repo>
-Set-Location .\opencode
-go build -o opencode.exe .
-```
+- `~/.config/opencode/`
 
-然後保存：
+### 驗證 GSD 有沒有裝好
 
-- `opencode`
-- `opencode --version` 輸出
-- `shasum -a 256 opencode`
+你至少要確認：
 
----
+- `~/.config/opencode/` 下有新內容
+- 重新啟動 `OpenCode`
+- 可以使用 `GSD` workflow
 
-## 4. 內網機器安裝
+如果你們的 `OpenCode` 對 slash command / workflow 有對應入口，請直接用該入口測：
 
-### Step 1
+- `gsd help`
+- `map-codebase`
+- 或等價命令
 
-把 binary 放到可執行路徑。
-
-Linux:
-
-```bash
-mkdir -p ~/bin
-cp opencode ~/bin/
-chmod +x ~/bin/opencode
-```
-
-PowerShell:
-
-```powershell
-New-Item -ItemType Directory -Force "$HOME\\bin" | Out-Null
-Copy-Item .\opencode.exe "$HOME\\bin\\opencode.exe" -Force
-```
-
-### Step 2
-
-把安裝路徑放到 PATH。
-
-Linux:
-
-```bash
-export PATH="$HOME/bin:$PATH"
-```
-
-建議寫進：
-
-- `~/.bashrc`
-- 或 `~/.zshrc`
-
-PowerShell:
-
-```powershell
-$env:Path="$HOME\bin;$env:Path"
-[Environment]::SetEnvironmentVariable("Path", "$HOME\bin;$([Environment]::GetEnvironmentVariable('Path','User'))", "User")
-```
-
-### Step 3
-
-確認：
+如果沒有固定 slash 入口，就至少測試一個明確指令：
 
 ```text
-opencode --help
+請先執行 GSD 的 codebase mapping，不要直接開始寫 code。
 ```
 
 ---
 
-## 5. 設定檔位置
+## 3. 安裝 Superpowers
 
-`opencode` 會找這些設定檔位置：
+## 官方方式
 
-- `$HOME/.opencode.json`
-- `$XDG_CONFIG_HOME/opencode/.opencode.json`
-- `./.opencode.json`
-
-對公司環境，我建議：
-
-- 個人機器放 `$HOME/.opencode.json`
-- 專案級設定放 repo 裡的 `./.opencode.json`
-
----
-
-## 6. 最小設定
-
-你至少要提供模型提供者設定與金鑰來源。
-
-常見做法：
-
-- 直接環境變數
-- 或設定檔指定 provider
-
-例如若走 Anthropic：
-
-Linux:
-
-```bash
-export ANTHROPIC_API_KEY=...
-```
-
-PowerShell:
-
-```powershell
-$env:ANTHROPIC_API_KEY="..."
-```
-
-如果公司不允許直接對外，則要改成：
-
-- 公司 proxy
-- 公司 gateway
-- 公司統一發的 provider endpoint
-
----
-
-## 7. 公司封閉網路下的使用建議
-
-### 情境 A：公司可白名單特定模型供應商
-
-這時可直接：
-
-- 設定 API key
-- 設定 proxy
-- 啟動 `opencode`
-
-proxy 例子：
-
-Linux:
-
-```bash
-export HTTP_PROXY=http://proxy.company.local:port
-export HTTPS_PROXY=http://proxy.company.local:port
-export NO_PROXY=localhost,127.0.0.1,.company.local
-```
-
-PowerShell:
-
-```powershell
-$env:HTTP_PROXY="http://proxy.company.local:port"
-$env:HTTPS_PROXY="http://proxy.company.local:port"
-$env:NO_PROXY="localhost,127.0.0.1,.company.local"
-```
-
-### 情境 B：公司有內部 LLM gateway
-
-這時要確認：
-
-- `opencode` 是否能對接你們的 gateway
-- provider / endpoint / auth 方式怎麼配
-
-### 情境 C：公司完全不能對外
-
-那 `opencode` 只有安裝能完成，AI 功能本身仍無法正常用。
-
----
-
-## 8. 安裝後怎麼驗證有沒有 work
-
-至少做這 5 步：
-
-### Step 1. 驗證 binary 已安裝
+官方 README 對 `OpenCode` 的安裝方式是：
 
 ```text
-opencode --help
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
-如果這一步失敗，通常代表：
+這代表：
 
-- binary 沒放進 PATH
-- 檔案沒有執行權限
-- Windows PowerShell 沒找到正確路徑
-
-### Step 2. 驗證版本資訊
-
-如果你們打包時有保存版本資訊，請再跑一次：
-
-```text
-opencode --version
-```
-
-若該版本不支援 `--version`，至少保留外網打包時記錄的版本與 SHA256。
-
-### Step 3. 驗證設定檔或環境變數已生效
-
-至少確認：
-
-- provider 設定已放進 `.opencode.json` 或環境變數
-- 若走 proxy，`HTTP_PROXY` / `HTTPS_PROXY` 已設定
-- 若走公司 gateway，endpoint 與 auth 已填好
-
-### Step 4. 驗證模型連線是否可用
-
-啟動 `opencode` 後，做一個最小測試，例如：
-
-```text
-請只回一句：opencode 連線正常。
-```
-
-如果可以正常回覆，就代表：
-
-- binary 可執行
-- provider 設定正確
-- proxy / gateway / 白名單 大致可用
-
-### Step 5. 驗證 `run-prd` 流程可配合
-
-再確認這些本地工具存在：
-
-```text
-rg --version
-mvn -v
-git --version
-```
-
-因為 `opencode` 若要配合你這套 workflow，還是需要：
-
-- `rg`
-- `mvn`
-- `git`
-
-### 最小驗收標準
-
-滿足以下條件，就可以算安裝成功：
-
-- `opencode --help` 正常
-- 能辨識 provider 設定
-- 能得到一則正常模型回覆
-- `rg` / `mvn` / `git` 都可用
+- `OpenCode` 路徑不是 marketplace
+- 而是讀 repo 內的 `.opencode/INSTALL.md`
 
 ---
 
-## 9. 建議搭配的本地工具
+## 4. 內網版本怎麼做
 
-若你要配合 `run-prd` 套件，內網還應至少有：
+### Step 1. 建公司內部鏡像
 
-- `rg`
-- `mvn`
-- `git`
+把這個 repo 鏡像到公司內部：
 
-確認：
+- `obra/superpowers`
+
+### Step 2. 讓 OpenCode 讀內部鏡像的 `.opencode/INSTALL.md`
+
+你們內部可以改成這樣的指令思路：
 
 ```text
-rg --version
-mvn -v
-git --version
+Fetch and follow instructions from <internal-git>/obra/superpowers/.opencode/INSTALL.md
 ```
 
+如果公司政策不允許讓 agent 自己 fetch，也可以改成人工方式：
+
+1. 打開內部鏡像 repo
+2. 找 `.opencode/INSTALL.md`
+3. 照它的步驟手動安裝
+
+### Step 3. 驗證是否生效
+
+開一個新 session，直接測：
+
+```text
+請先為這個功能做 implementation plan，不要直接寫 code。
+```
+
+或：
+
+```text
+請用 test-driven-development 的方式處理這個需求。
+```
+
+如果 `Superpowers` 有作用，通常你會看到：
+
+- 更強的 planning
+- 更明確的 TDD workflow
+- 更明顯的 skill 驅動行為
+
 ---
 
-## 10. 建議如何放進公司環境
+## 5. 如果公司不想維護內部鏡像
 
-最穩的方式是：
+那建議：
 
-1. 外網機器產出 binary
-2. 產出 SHA256
-3. 經公司檔案審核流程帶入
-4. 內網機器放入 `~/bin`
-5. 設定 provider / proxy / gateway
+- `OpenCode` 先裝 `GSD`
+- `Superpowers` 先不列入公司標準
+
+理由：
+
+- `GSD` 有官方 installer
+- `Superpowers` 在 `OpenCode` 是透過 repo 內安裝檔運作
+- 若你們不願意維護 repo 鏡像，就會增加維運成本
 
 ---
 
-## 11. 常見問題
+## 6. 最小驗收標準
 
-### Q1. 為什麼不直接用 install script？
+### `GSD`
 
-因為封閉網路通常不能即時下載。
+以下通過就算成功：
 
-### Q2. `opencode` 能不能完全離線使用？
+- `npx get-shit-done-cc --opencode --global` 可完成
+- `~/.config/opencode/` 有對應安裝內容
+- 重開 `OpenCode` 後能觸發 `GSD` workflow
 
-安裝可以離線搬運，  
-AI 能力是否可用，仍取決於模型連線方式。
+### `Superpowers`
 
-### Q3. 我公司如果要長期用，還建議選 opencode 嗎？
+以下通過才算成功：
 
-短期可行。  
-長期則要再評估專案已封存這件事。
+- 公司內部鏡像可讀
+- `.opencode/INSTALL.md` 可被跟隨或手動執行
+- 新 session 中可明顯觸發 planning / TDD / workflow 行為
 
-## 12. 你公司目前假設的推薦落地
+---
 
-依你目前提供的條件：
+## 7. 一句話版
 
-- 機器有 `Linux`
-- 機器有 `Windows PowerShell`
-- 內網可走 `proxy`
-- 要同時準備 `Claude Code` 與 `opencode`
-
-建議：
-
-1. 把 `opencode` 先做成外網編譯 / 下載後帶入的 binary 包
-2. 在 `Linux` 和 `PowerShell` 都測試一次 `PATH` 與 proxy
-3. 再確認 `opencode` 對你們公司允許的模型 provider 是否能通
+- `GSD`：OpenCode 可直接裝，適合第一版
+- `Superpowers`：OpenCode 官方不是 marketplace，而是 `.opencode/INSTALL.md`；公司版最適合走內部鏡像 repo
