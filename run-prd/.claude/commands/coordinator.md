@@ -1,6 +1,12 @@
 ---
-description: Route work to GSD, Superpowers, or the Local Verification Stack based on the current stage, and produce a strict handoff payload.
-allowed-tools: Read, Glob, Grep, Bash(git diff --name-only:*), Bash(test -f:*), Bash(ls:*)
+description: "Route work to GSD, Superpowers, or the Local Verification Stack based on the current stage, and produce a strict handoff payload."
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash(git diff --name-only:*)
+  - Bash(test -f:*)
+  - Bash(ls:*)
 ---
 
 ## Purpose

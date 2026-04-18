@@ -1,6 +1,14 @@
 ---
-description: Run pre-change impact analysis or post-change impact verification for the current Java CLI project.
-allowed-tools: Read, Glob, Grep, Bash(git diff --name-only:*), Bash(ls:*), Bash(test -f:*), Bash(find:*), Bash(pwd)
+description: "Run pre-change impact analysis or post-change impact verification for the current Java CLI project."
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash(git diff --name-only:*)
+  - Bash(ls:*)
+  - Bash(test -f:*)
+  - Bash(find:*)
+  - Bash(pwd)
 ---
 
 ## Purpose

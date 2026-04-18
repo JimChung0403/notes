@@ -1,6 +1,15 @@
 ---
-description: Verify local Java changes by checking compile, suggested targeted tests, and review readiness.
-allowed-tools: Read, Glob, Grep, Bash(git diff --name-only:*), Bash(ls:*), Bash(test -f:*), Bash(mvn test-compile:*), Bash(./gradlew testClasses:*), Bash(pwd)
+description: "Verify local Java changes by checking compile, suggested targeted tests, and review readiness."
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash(git diff --name-only:*)
+  - Bash(ls:*)
+  - Bash(test -f:*)
+  - Bash(mvn test-compile:*)
+  - Bash(./gradlew testClasses:*)
+  - Bash(pwd)
 ---
 
 ## Purpose
