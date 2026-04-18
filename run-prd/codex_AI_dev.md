@@ -462,6 +462,25 @@ feature 完成後回寫：
 - 讓 `Superpowers` 不直接吃原始 PRD
 - 而是吃一份已經和 codebase 對齊過的工程版摘要
 
+#### `templates/feature-brief.template.md` 是什麼
+
+它是：
+
+- `docs/feature-briefs/<PRD-ID>.md` 的模板
+
+它不是：
+
+- 後續流程直接讀取的工作檔
+
+正確關係是：
+
+- `templates/feature-brief.template.md`
+  - 只負責定義格式
+- `/run-prd`
+  - 依模板產出真正的工作檔
+- `docs/feature-briefs/<PRD-ID>.md`
+  - 才是後續要交給 `Superpowers` 讀的檔案
+
 內容至少要包含：
 
 - feature brief
@@ -487,6 +506,22 @@ feature 完成後回寫：
 
 - **內容 owner = `GSD`**
 - **落檔執行 = `/run-prd`**
+
+#### `Superpowers` 讀哪一份
+
+`Superpowers` 應該讀的是：
+
+- `docs/feature-briefs/<PRD-ID>.md`
+- `context_files`
+
+它不應該直接讀：
+
+- `templates/feature-brief.template.md`
+
+也就是：
+
+- template 只定義格式
+- 真正 handoff 的是 feature brief file
 
 ---
 

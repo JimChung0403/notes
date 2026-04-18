@@ -22,7 +22,7 @@
 - `.claude/commands/verify-local.md`
   - 本地驗證清單
 - `templates/feature-brief.template.md`
-  - 單次需求的準備文件模板
+  - `docs/feature-briefs/<PRD-ID>.md` 的模板，不是直接交給 `Superpowers` 的工作檔
 
 ## 建議用法
 
@@ -51,6 +51,14 @@ docs/feature-briefs/<PRD-ID>.md
 ```
 
 這份是交給 `Superpowers` 開始實作前的正式準備文件。
+
+如果存在：
+
+```text
+templates/feature-brief.template.md
+```
+
+則 `/run-prd` 應優先依照 template 結構產出這份 feature brief。
 
 ### 3. 中途只想做局部工作
 

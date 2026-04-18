@@ -83,6 +83,12 @@ allowed-tools:
 
 如果看不出明確的 PRD ID，就從 PRD filename 推導一個穩定的檔名。
 
+如果存在：
+
+- `templates/feature-brief.template.md`
+
+優先依照這個 template 的結構建立 `docs/feature-briefs/<PRD-ID>.md`。
+
 feature brief file 必須包含：
 
 - feature brief
@@ -134,10 +140,13 @@ expected_output:
 並且包含以下這段固定指令：
 
 ```text
-Before planning or implementation, read all context_files first.
+Before planning or implementation:
+1. Read feature_brief_file first.
+2. Then read all context_files.
+Use the feature brief as the primary implementation scope.
 Use GSD files as the source of truth for architecture, conventions,
 testing approach, integrations, and known concerns.
-Do not start implementation planning until these files are read.
+Do not start implementation planning until feature_brief_file and all context_files are read.
 ```
 
 ### Step 7: 提醒後續 verification
