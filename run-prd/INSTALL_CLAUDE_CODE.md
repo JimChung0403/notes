@@ -6,10 +6,11 @@
 - 公司可以走 `npm install`
 - 公司 **不能直接用外部 marketplace / plugin marketplace**
 
-所以這份文件只回答兩件事：
+所以這份文件回答三件事：
 
 1. 怎麼在 `Claude Code` 裝 `GSD`
-2. 怎麼在 **不能用 marketplace** 的情況下處理 `Superpowers`
+2. `Superpowers` 官方怎麼裝
+3. 怎麼在 **不能用 marketplace** 的情況下手動導入 `Superpowers`
 
 ---
 
@@ -25,16 +26,11 @@
 
 ### `Superpowers`
 
-`Superpowers` 對 `Claude Code` 的官方安裝說明，主路徑是：
-
-- Anthropic 官方 plugin marketplace
-- 或 `obra/superpowers-marketplace`
-
-如果你公司不能用 marketplace，**官方 README 沒有提供一條同樣正式的「無 marketplace 直接安裝」路徑**。  
-所以你在公司裡有兩種選擇：
+`Superpowers` 對 `Claude Code` 的官方主路徑是 plugin marketplace。  
+如果公司不能用 marketplace，仍然有兩種可行 fallback：
 
 1. **內部鏡像 marketplace**
-2. **先不要把 `Superpowers` 當公司標準安裝件**
+2. **抓原始碼後手動導入 commands / skills**
 
 ---
 
@@ -87,9 +83,7 @@ npx get-shit-done-cc --claude --global
 
 ---
 
-## 3. `Superpowers` 在不能用 marketplace 時怎麼辦
-
-## 官方支援現況
+## 3. 安裝 Superpowers：官方路徑
 
 `Superpowers` 官方 README 對 `Claude Code` 的安裝方式，寫的是：
 
@@ -98,6 +92,8 @@ npx get-shit-done-cc --claude --global
 - 再 `/plugin install superpowers@superpowers-marketplace`
 
 也就是說，**官方主路徑就是 marketplace**。
+
+如果你公司 proxy 可以連到官方 marketplace，優先走這條路。
 
 ---
 
@@ -149,7 +145,105 @@ npx get-shit-done-cc --claude --global
 
 ---
 
-## 5. 公司可行方案 B：先不要在 Claude Code 裝 Superpowers
+## 5. 公司可行方案 B：抓原始碼後手動導入
+
+這一條不是 `Claude Code` 官方完整安裝路徑，但對封閉網路公司是實務可行方案。
+
+### 5.1 先準備原始碼
+
+請先在可存取的環境取得下列 repo，或做成公司內部 mirror：
+
+- `obra/superpowers`
+
+### 5.2 你會用到哪些目錄
+
+`Superpowers` repo 內你至少要看這幾個目錄：
+
+- `commands/`
+- `skills/`
+- `agents/`
+- `hooks/`
+
+對 `Claude Code` 而言，**最容易先落地的是 `commands/` 與 `skills/`**。
+
+### 5.3 最小手動導入做法
+
+如果你公司現在只想先得到接近 `Superpowers` 的工作流，建議先做這件事：
+
+1. 從 `obra/superpowers` 挑出你要的 commands  
+   例如：
+   - `/brainstorm`
+   - `/write-plan`
+   - `/execute-plan`
+
+2. 把這些 command 改寫成你公司自己的 `.claude/commands/*.md`  
+   例如：
+   - `.claude/commands/brainstorm.md`
+   - `.claude/commands/write-plan.md`
+   - `.claude/commands/execute-plan.md`
+
+3. 再挑出你們第一版真的需要的 skill 流程，轉成公司內部文件或 prompt 規則  
+   建議先從：
+   - `brainstorming`
+   - `writing-plans`
+   - `executing-plans`
+   - `test-driven-development`
+   - `requesting-code-review`
+   開始
+
+4. 把這些規則收斂進：
+   - `CLAUDE.md`
+   - repo 內的 `.claude/commands/`
+   - 你們的 `run-prd` 套件
+
+### 5.4 這種手動導入的缺點
+
+這樣做可以用，但**不等於完整官方 plugin**。  
+你通常會少掉或不保證完整拿到：
+
+- plugin marketplace 的安裝與更新機制
+- `skills-search`
+- `SessionStart context injection`
+- 某些自動觸發行為
+
+所以這條路更準確的定位是：
+
+**公司內部版 `Superpowers-style workflow`**
+
+不是：
+
+**完整官方 `Superpowers plugin`**
+
+### 5.5 怎麼驗證手動導入有沒有生效
+
+你至少要做這 3 個測試：
+
+1. command 可被叫出  
+   例如：
+
+   ```text
+   /brainstorm 我要為既有 Java service 加 pagination，先不要寫 code
+   ```
+
+2. planning command 可生成結構化 plan  
+   例如：
+
+   ```text
+   /write-plan 根據 docs/feature-briefs/ORDER-123.md 產 implementation plan
+   ```
+
+3. execution command 會要求驗證與 review  
+   例如：
+
+   ```text
+   /execute-plan
+   ```
+
+如果這三個都能工作，代表你已經有一個最低可用的 `Superpowers` fallback。
+
+---
+
+## 6. 公司可行方案 C：先不要在 Claude Code 裝 Superpowers
 
 如果你們公司：
 
@@ -174,7 +268,7 @@ npx get-shit-done-cc --claude --global
 
 ---
 
-## 6. 我對公司版的實際建議
+## 7. 我對公司版的實際建議
 
 ### 第一版建議
 
@@ -185,12 +279,13 @@ npx get-shit-done-cc --claude --global
 ### 第二版再評估
 
 - 內部鏡像 `Superpowers marketplace`
+- 或公司版手動導入 `/brainstorm`、`/write-plan`、`/execute-plan`
 
 這樣風險最小。
 
 ---
 
-## 7. 最小驗收標準
+## 8. 最小驗收標準
 
 ### `GSD`
 
@@ -200,7 +295,7 @@ npx get-shit-done-cc --claude --global
 - 重開 `Claude Code`
 - `/gsd:help` 正常
 
-### `Superpowers`
+### `Superpowers`：marketplace 版
 
 以下通過才算成功：
 
@@ -208,9 +303,22 @@ npx get-shit-done-cc --claude --global
 - `/plugin install superpowers@superpowers-marketplace` 可成功
 - 新 session 中能看到 `Superpowers` workflow 生效
 
+### `Superpowers`：手動 fallback 版
+
+以下通過就算最低成功：
+
+- `.claude/commands/brainstorm.md`、`.claude/commands/write-plan.md`、`.claude/commands/execute-plan.md` 已存在
+- `/brainstorm`、`/write-plan`、`/execute-plan` 可以在新 session 直接使用
+- command 內容會要求：
+  - 先做規劃
+  - 再做 implementation
+  - 再做 verification / review
+
 ---
 
-## 8. 一句話版
+## 9. 一句話版
 
 - `GSD`：可以直接裝，適合公司第一版
-- `Superpowers`：對 `Claude Code` 官方是 marketplace 路徑；公司如果不能用 marketplace，就走內部鏡像，不然先不要列為標準安裝件
+- `Superpowers`：對 `Claude Code` 官方是 marketplace 路徑；公司如果不能用 marketplace，可以走：
+  - 內部鏡像 marketplace
+  - 或手動導入 commands / skills 的 fallback 方案

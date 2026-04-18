@@ -6,10 +6,11 @@
 - 公司不能直接用外部 marketplace
 - 但公司可以使用內部 Git / 內部鏡像 repo
 
-這份文件只回答兩件事：
+這份文件回答三件事：
 
 1. 怎麼在 `OpenCode` 裝 `GSD`
-2. 怎麼在沒有 marketplace 的情況下裝 `Superpowers`
+2. `Superpowers` 官方怎麼裝
+3. 在沒有外網 / 不能直接 fetch 的情況下，怎麼手動導入 `Superpowers`
 
 ---
 
@@ -23,15 +24,12 @@
 
 ### `Superpowers`
 
-`Superpowers` 官方 README 對 `OpenCode` 的說法是：
+`Superpowers` 對 `OpenCode` 的官方路徑不是 marketplace，而是讀 repo 內的 `.opencode/INSTALL.md`。  
+所以在公司環境裡，最自然的做法是：
 
-- 讓 `OpenCode` 去抓 `https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md`
-- 再照裡面的步驟做
-
-所以如果公司不能直接抓外網，你最合理的做法是：
-
-- 先把 `obra/superpowers` 做成公司內部鏡像
-- 再改成讀公司內部鏡像裡的 `.opencode/INSTALL.md`
+1. 先把 `obra/superpowers` 做成公司內部鏡像
+2. 讓 `OpenCode` 讀公司內部鏡像的 `.opencode/INSTALL.md`
+3. 如果連這都不方便，再走手動導入
 
 ---
 
@@ -69,7 +67,7 @@ npx get-shit-done-cc --opencode --global
 
 ---
 
-## 3. 安裝 Superpowers
+## 3. 安裝 Superpowers：官方路徑
 
 ## 官方方式
 
@@ -86,7 +84,7 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 
 ---
 
-## 4. 內網版本怎麼做
+## 4. 內網版本怎麼做：公司內部鏡像
 
 ### Step 1. 建公司內部鏡像
 
@@ -130,7 +128,53 @@ Fetch and follow instructions from <internal-git>/obra/superpowers/.opencode/INS
 
 ---
 
-## 5. 如果公司不想維護內部鏡像
+## 5. 內網版本怎麼做：手動 local 導入
+
+如果你們公司不想讓 `OpenCode` 自己 fetch 安裝檔，也可以直接抓原始碼後手動導入。
+
+### 5.1 先準備原始碼
+
+請先在公司內部可讀位置放好：
+
+- `obra/superpowers`
+
+### 5.2 優先看的目錄
+
+對 `OpenCode`，優先看：
+
+- `.opencode/INSTALL.md`
+- `commands/`
+- `skills/`
+- `agents/`
+- `hooks/`
+
+### 5.3 建議導入順序
+
+先做最小版本：
+
+1. 先照 `.opencode/INSTALL.md` 的內容手動搬需要的檔案
+2. 如果你們只想先拿到核心工作流，至少先導入：
+   - `brainstorming`
+   - `writing-plans`
+   - `executing-plans`
+   - `test-driven-development`
+   - `requesting-code-review`
+3. 再把你們公司常用入口包成：
+   - `run-prd`
+   - `impact`
+   - `verify-local`
+
+### 5.4 驗證方式
+
+你至少要驗證：
+
+1. `OpenCode` 能按照 `.opencode/INSTALL.md` 的期望載入對應 workflow
+2. 要求它做 planning 時，會明顯走較強的規劃流程
+3. 要求它用 TDD 做 feature 時，會先談 test 再談 implementation
+
+---
+
+## 6. 如果公司不想維護內部鏡像
 
 那建議：
 
@@ -145,7 +189,7 @@ Fetch and follow instructions from <internal-git>/obra/superpowers/.opencode/INS
 
 ---
 
-## 6. 最小驗收標準
+## 7. 最小驗收標準
 
 ### `GSD`
 
@@ -155,7 +199,7 @@ Fetch and follow instructions from <internal-git>/obra/superpowers/.opencode/INS
 - `~/.config/opencode/` 有對應安裝內容
 - 重開 `OpenCode` 後能觸發 `GSD` workflow
 
-### `Superpowers`
+### `Superpowers`：內部鏡像 / 官方路徑
 
 以下通過才算成功：
 
@@ -163,9 +207,19 @@ Fetch and follow instructions from <internal-git>/obra/superpowers/.opencode/INS
 - `.opencode/INSTALL.md` 可被跟隨或手動執行
 - 新 session 中可明顯觸發 planning / TDD / workflow 行為
 
+### `Superpowers`：手動 fallback 版
+
+以下通過就算最低成功：
+
+- 你們已經把 `.opencode/INSTALL.md` 所需內容手動導入
+- 至少能穩定觸發 planning / TDD / review 類 workflow
+- 可配合你們自己的 `run-prd` 流程使用
+
 ---
 
-## 7. 一句話版
+## 8. 一句話版
 
 - `GSD`：OpenCode 可直接裝，適合第一版
-- `Superpowers`：OpenCode 官方不是 marketplace，而是 `.opencode/INSTALL.md`；公司版最適合走內部鏡像 repo
+- `Superpowers`：OpenCode 官方不是 marketplace，而是 `.opencode/INSTALL.md`；公司版可以走：
+  - 內部鏡像 repo
+  - 或直接用 local repo 手動導入
