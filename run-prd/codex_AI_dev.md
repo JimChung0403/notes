@@ -157,6 +157,85 @@
 
 ## 3. 每一個元件怎麼使用
 
+### 3.0 使用入口怎麼選
+
+這一段是日常使用時最容易混淆的地方。
+
+#### 3.0.1 有 PRD、要啟動一整個 feature
+
+用：
+
+```text
+/run-prd docs/prd/<PRD-ID>.md
+```
+
+適合情境：
+
+- PM 給了正式 PRD
+- 你要從 PRD 對齊一路跑到 implementation handoff
+- 你希望流程從一開始就帶上 GSD context
+
+一句話：
+
+- `/run-prd` = **PRD-driven feature 開發的主入口**
+
+#### 3.0.2 feature brief 已存在，兩天後回來續做
+
+用：
+
+```text
+/coordinator 我要繼續 <PRD-ID>，請讀 docs/feature-briefs/<PRD-ID>.md，並判斷下一步
+```
+
+適合情境：
+
+- 已經有 `docs/feature-briefs/<PRD-ID>.md`
+- 做到一半中斷後回來
+- 不確定現在該進 `Superpowers` 還是 `Local Verification Stack`
+
+一句話：
+
+- `/coordinator` = **流程導航器 / 路由器**
+
+#### 3.0.3 只想查影響面
+
+用：
+
+```text
+/impact <需求或變更描述>
+```
+
+適合情境：
+
+- 想知道改 A 可能還會影響哪裡
+- 改完後想查還有沒有漏改點
+
+#### 3.0.4 只想整理本地驗證
+
+用：
+
+```text
+/verify-local
+```
+
+適合情境：
+
+- code 已經改完
+- 想知道 compile、targeted tests、/review 該怎麼跑
+
+#### 3.0.5 只想看最近改動的 review
+
+用：
+
+```text
+/review
+```
+
+適合情境：
+
+- 已經有 code changes
+- 想用 AI reviewer 看最近改動
+
 ### 3.0 需求拆分：你、GSD、Superpowers、Coordinator Skill 各自做什麼
 
 這一段很重要。  
@@ -337,6 +416,8 @@ feature 完成後回寫：
   - `TESTING.md`
   - `INTEGRATIONS.md`
   - `CONCERNS.md`
+- 單次需求建議另外落一份：
+  - `docs/feature-briefs/<PRD-ID>.md`
 
 #### 它在流程中的角色
 
@@ -346,6 +427,66 @@ feature 完成後回寫：
 - 哪些地方 fragile？
 - 哪裡才是合理的修改區域？
 - 這個 feature 在整體 roadmap / phase 裡的位置是什麼？
+- 這次 PRD 對齊後，真正交給 `Superpowers` 的 feature brief 長什麼樣？
+
+#### 單次需求文件建議
+
+除了長期文件外，建議每次 PRD 再落一份：
+
+- `docs/feature-briefs/<PRD-ID>.md`
+
+這份文件由 `GSD` 主責整理，內容至少應包含：
+
+- feature brief
+- PRD 對齊結果
+- actual change scope
+- constraints
+- acceptance criteria
+- context files
+- open questions
+
+#### `docs/feature-briefs/<PRD-ID>.md` 是什麼
+
+它是：
+
+- 把 PM 的 PRD 轉成 **工程可執行需求摘要** 的中介文件
+
+它不是：
+
+- 完整 PRD
+- implementation plan
+- 最終測試報告
+
+它的用途是：
+
+- 讓 `Superpowers` 不直接吃原始 PRD
+- 而是吃一份已經和 codebase 對齊過的工程版摘要
+
+內容至少要包含：
+
+- feature brief
+- business goal
+- actual change scope
+- constraints
+- acceptance criteria
+- context files
+- alignment report summary
+- open questions
+
+#### `docs/feature-briefs/<PRD-ID>.md` 誰負責
+
+概念上：
+
+- 內容主責是 `GSD`
+
+實作上：
+
+- 由 `/run-prd` 幫你把 GSD 整理好的內容正式寫成檔案
+
+一句話：
+
+- **內容 owner = `GSD`**
+- **落檔執行 = `/run-prd`**
 
 ---
 
@@ -496,6 +637,32 @@ Gradle：
 /review
 ```
 
+#### 什麼情境下要用 `rg`
+
+`rg` 不是每一步都要用，但只要你要回答：
+
+- 誰在用它？
+- 哪裡還有它？
+- 我是不是漏改了？
+
+就應該叫 `rg` 出來。
+
+最常見情境：
+
+1. PRD 提到某個 class / method / DTO，想先驗證它真的存在  
+2. 準備改 method signature / interface / DTO 欄位，怕漏改 caller  
+3. 改完 code 後，想確認還有沒有殘留舊寫法  
+4. 不知道該跑哪些 targeted tests，想先找相關 test 類別  
+5. PM 提到的名稱可能過時，想驗證現有 codebase 裡是不是同一個東西  
+
+最常見的用法：
+
+```bash
+rg "OrderService|findOrders|OrderDto" src test
+rg "UserProfileManager|ProfileService" src test
+rg "OrderServiceTest|OrderControllerIT" src test
+```
+
 #### 它在流程中的角色
 
 `Local Verification Stack` 負責回答：
@@ -564,6 +731,7 @@ GSD 的主要輸出位置：
 
 ```yaml
 feature_brief: <summary from GSD>
+feature_brief_file: docs/feature-briefs/<PRD-ID>.md
 context_files:
   - PROJECT.md
   - ROADMAP.md
@@ -598,6 +766,13 @@ Do not start implementation planning until these files are read.
 - 不負責自己猜 repo 規則
 - 不負責自己重新建立專案脈絡
 - 只負責在 GSD 提供的上下文上做 implementation discipline
+
+所以：
+
+- `Superpowers` 不會天然知道去哪裡讀文件
+- 是 `/run-prd` 或 `/coordinator` 在 handoff 裡明確指定：
+  - `feature_brief_file`
+  - `context_files`
 
 #### 最小輸出格式
 
@@ -691,6 +866,12 @@ handoff_payload:
 /gsd:plan-phase 1
 ```
 
+然後整理成單次需求文件：
+
+```text
+docs/feature-briefs/<PRD-ID>.md
+```
+
 如果要補查：
 
 ```bash
@@ -715,6 +896,14 @@ rg "TargetClass|TargetMethod|TargetDto" src test
 brainstorming
 writing-plans
 ```
+
+輸入來源優先順序：
+
+1. `docs/feature-briefs/<PRD-ID>.md`
+2. `PROJECT.md`
+3. `ROADMAP.md`
+4. `STATE.md`
+5. `.planning/codebase/*.md`
 
 ---
 
@@ -782,6 +971,118 @@ mvn -Dtest=MyServiceTest test
 /gsd:progress
 /gsd:complete-milestone
 ```
+
+#### 什麼時候呼叫 `/gsd:progress`
+
+當這些條件成立時，就可以考慮呼叫：
+
+- 功能已經做完
+- compile / test-compile 已過
+- targeted tests 已過
+- `/review` 已看完
+- 目前沒有打算立刻再修的問題
+- 你準備把這次工作當成一個可收尾的階段
+
+如果只是完成一個 feature，但整個 milestone 還沒結束：
+
+```text
+/gsd:progress
+```
+
+#### 什麼時候呼叫 `/gsd:complete-milestone`
+
+當這次工作已經不只是單一 feature 收尾，而是：
+
+- 一個 milestone 完成
+- 一個 phase 完成
+- 你準備正式切到下一階段
+
+才接著呼叫：
+
+```text
+/gsd:complete-milestone
+```
+
+#### 這兩個指令是誰呼叫的
+
+目前這套流程裡：
+
+- 主責還是你在收尾時手動呼叫
+
+因為：
+
+- `Superpowers` 不負責更新 project state
+- `Local Verification Stack` 只負責驗證
+- `Coordinator Skill` 最多只是提醒你「現在該回寫了」
+
+#### `STATE.md` 是誰的責任
+
+主責 owner 是：
+
+- `GSD`
+
+`STATE.md` 應該只保留：
+
+- active work
+- current phase
+- open blockers
+- next actions
+
+它不是：
+
+- 永久歷史日誌
+- 從古到今的完整紀錄庫
+
+#### `STATE.md` 什麼時候有價值
+
+當你開始出現以下情境時，`STATE.md` 會很有價值：
+
+- 同時有多個 PRD 在跑
+- 一個 feature 會做很多天
+- 有 phase / milestone 概念
+- 你常常中斷又回來
+- 你想知道：
+  - 現在做到哪
+  - 下一步是什麼
+  - 哪些 blocker 還沒解
+- 團隊不只你一個人要看
+
+#### `STATE.md` 什麼時候可以先不用強制管理
+
+如果你目前是：
+
+- 單人開發
+- PRD-driven
+- 以單次 feature 為主
+- 已經有 `docs/feature-briefs/<PRD-ID>.md`
+
+那第一版可以先不強制使用 `STATE.md` 作為主要恢復入口。  
+這種情況下，`feature brief` 通常比 `STATE.md` 更重要。
+
+#### `STATE.md` 什麼時候要清掉內容
+
+不是整份刪掉，而是：
+
+- 只保留目前有效狀態
+- 已完成的詳細內容要移出或收斂
+
+適合清理的時間點：
+
+- 一個 feature 完成後
+- 一個 milestone 完成後
+- 一個 phase 切換時
+
+建議移出去的內容：
+
+- 已完成 feature 的詳細執行狀態
+- 已解決的 blocker
+- 舊 phase 的細節
+
+建議保留的內容：
+
+- active work
+- current blockers
+- next actions
 
 ---
 
@@ -860,6 +1161,14 @@ rg -> compile -> targeted tests -> /review
 ```
 
 更符合你現在的實際場景。
+
+如果你是 PRD-driven 日常開發，最實用的入口規則是：
+
+- 有新的 PRD，要啟動完整流程 -> `/run-prd`
+- feature brief 已存在、只是回來續做 -> `/coordinator`
+- 只查 impact -> `/impact`
+- 只整理本地驗證 -> `/verify-local`
+- 只看最近改動 review -> `/review`
 
 ## 參考連結
 
