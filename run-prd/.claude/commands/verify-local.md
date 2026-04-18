@@ -1,5 +1,5 @@
 ---
-description: "Verify local Java changes by checking compile, suggested targeted tests, and review readiness."
+description: "檢查 local Java changes 的 compile、建議的 targeted tests 與 review readiness。"
 allowed-tools:
   - Read
   - Glob
@@ -12,32 +12,32 @@ allowed-tools:
   - Bash(pwd)
 ---
 
-## Purpose
+## 目的
 
-Use this command after code changes exist to prepare for local review and closure.
+當已經有 code changes 時，用這個 command 準備 local review 與收尾。
 
-## What To Do
+## 要做的事
 
-1. Detect changed files with `git diff --name-only`
-2. Decide whether the project looks Maven-based or Gradle-based
-3. Recommend the appropriate compile or test-compile command
-4. Suggest targeted tests based on changed files, names, packages, and common Java conventions
-5. Remind the user to run `/review` after compile and targeted tests
+1. 用 `git diff --name-only` 找出 changed files
+2. 判斷專案看起來是 Maven-based 還是 Gradle-based
+3. 建議合適的 compile 或 test-compile command
+4. 根據 changed files、命名、packages 與常見 Java 慣例，建議 targeted tests
+5. 提醒使用者在 compile 與 targeted tests 完成後執行 `/review`
 
-Do not invent test names without explaining that they are inferred suggestions.
+不要在沒有說明的情況下憑空編造 test names；若是推測結果，要明講它們是 inferred suggestions。
 
-## Maven / Gradle Detection
+## Maven / Gradle 判斷
 
-- If `pom.xml` exists, prefer Maven commands
-- If `build.gradle` or `build.gradle.kts` exists, prefer Gradle commands
-- If both exist, mention both and say which one appears primary based on repository structure
+- 如果存在 `pom.xml`，優先使用 Maven commands
+- 如果存在 `build.gradle` 或 `build.gradle.kts`，優先使用 Gradle commands
+- 如果兩者都存在，就兩者都提到，並根據 repository structure 說明哪個看起來是主要工具
 
-## Output Format
+## 輸出格式
 
-Return only Markdown with these sections:
+只回傳 Markdown，並包含以下區塊：
 
 ### Changed Files
-- flat bullet list
+- 使用單層 bullet list
 
 ### Compile Step
 ```bash
@@ -45,10 +45,10 @@ Return only Markdown with these sections:
 ```
 
 ### Suggested Targeted Tests
-- one flat bullet per suggested command
+- 每個建議 command 各用一個單層 bullet
 
 ### Why These Tests
-- flat bullet list
+- 使用單層 bullet list
 
 ### Review Step
 ```text
@@ -56,7 +56,7 @@ Return only Markdown with these sections:
 ```
 
 ### Closure Rule
-- one short paragraph stating that work should not be considered done until compile, targeted tests, and `/review` have all been completed.
+- 用一小段短文說明：在 compile、targeted tests 與 `/review` 全部完成前，這份工作都不應視為 done。
 
 ## Current Request
 

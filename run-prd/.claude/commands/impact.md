@@ -1,5 +1,5 @@
 ---
-description: "Run pre-change impact analysis or post-change impact verification for the current Java CLI project."
+description: "為目前的 Java CLI 專案執行 pre-change impact analysis 或 post-change impact verification。"
 allowed-tools:
   - Read
   - Glob
@@ -11,40 +11,40 @@ allowed-tools:
   - Bash(pwd)
 ---
 
-## Purpose
+## 目的
 
-Use this command to analyze likely impact areas before coding, or verify possible missed changes after coding.
+用這個 command 在 coding 前分析可能的 impact 範圍，或在 coding 後驗證是否有漏改。
 
-## Mode Detection
+## 模式判斷
 
-- If `git diff --name-only` is empty, do **pre-change impact analysis**
-- If `git diff --name-only` is non-empty, do **post-change impact verification**
+- 如果 `git diff --name-only` 為空，執行 **pre-change impact analysis**
+- 如果 `git diff --name-only` 非空，執行 **post-change impact verification**
 
-## What To Do
+## 要做的事
 
 ### Pre-change impact analysis
 
-1. Identify the likely changed symbols, modules, classes, methods, interfaces, DTOs, or tests based on the request.
-2. Use repository search to find:
+1. 根據需求辨識可能會變動的 symbols、modules、classes、methods、interfaces、DTOs 或 tests。
+2. 用 repository search 找出：
    - usages
    - callers
-   - DTO or interface consumers
-   - likely affected tests
-3. Return a concise impact summary.
+   - DTO 或 interface 的 consumers
+   - 可能受影響的 tests
+3. 回傳精簡的 impact summary。
 
 ### Post-change impact verification
 
-1. Read current changed files from `git diff --name-only`
-2. Infer likely changed classes, methods, interfaces, DTOs, or modules
-3. Search for:
-   - related usages not updated
-   - tests that should probably be run
-   - callers or consumers that might also require updates
-4. Return likely missed areas.
+1. 從 `git diff --name-only` 讀取目前的 changed files
+2. 推論可能變動的 classes、methods、interfaces、DTOs 或 modules
+3. 搜尋：
+   - 相關但尚未更新的 usages
+   - 可能應該一起執行的 tests
+   - 可能也需要更新的 callers 或 consumers
+4. 回傳可能漏改的區域。
 
-## Suggested Search Style
+## 建議的搜尋方式
 
-Use repository search patterns such as:
+使用這類 repository search patterns：
 
 - class names
 - method names
@@ -52,29 +52,29 @@ Use repository search patterns such as:
 - DTO names
 - package names
 
-Prefer concise grep-driven evidence.
+優先使用精簡、以 grep 為主的證據。
 
-## Output Format
+## 輸出格式
 
-Return only Markdown with these sections:
+只回傳 Markdown，並包含以下區塊：
 
 ### Mode
 - `pre-change` or `post-change`
 
 ### Changed Files
-- list files if any, otherwise `none`
+- 如果有就列出 files，否則寫 `none`
 
 ### Likely Impact Areas
-- flat bullet list
+- 使用單層 bullet list
 
 ### Likely Related Tests
-- flat bullet list
+- 使用單層 bullet list
 
 ### Possible Missed Changes
-- flat bullet list
+- 使用單層 bullet list
 
 ### Recommended Next Step
-- one short paragraph
+- 一小段短文
 
 ## Current Request
 
