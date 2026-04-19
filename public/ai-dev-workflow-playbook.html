@@ -6,35 +6,43 @@
 <title>AI 開發工作流 Playbook｜OpenSpec + Superpowers</title>
 <style>
   :root {
-    --bg: #0B0D14;
-    --bg-2: #0F1117;
-    --surface: #161924;
-    --surface-2: #1E2231;
-    --surface-3: #262B3D;
-    --border: #2A2F42;
-    --border-light: #373D53;
-    --text: #E8EAF0;
-    --text-muted: #8C91A8;
-    --text-dim: #626880;
+    /* Apple-inspired light theme */
+    --bg:           #FFFFFF;        /* primary page bg */
+    --bg-2:         #F5F5F7;        /* elevated surfaces / sidebar */
+    --surface:      #FFFFFF;        /* cards */
+    --surface-2:    #FBFBFD;        /* subtle elevated */
+    --surface-3:    #F5F5F7;        /* chip / button hover */
+    --border:       #D2D2D7;        /* Apple standard border */
+    --border-light: #E8E8ED;        /* very subtle */
+    --text:         #1D1D1F;        /* Apple primary text */
+    --text-muted:   #424245;        /* secondary */
+    --text-dim:     #6E6E73;        /* tertiary / labels */
 
-    --c-read:    #60A5FA;   /* 讀懂 blue */
-    --c-analyze: #A78BFA;   /* 分析 purple */
-    --c-design:  #F472B6;   /* 設計 pink */
-    --c-build:   #FBBF24;   /* 實作 amber */
-    --c-test:    #34D399;   /* 測試 green */
-    --c-review:  #22D3EE;   /* 審查 cyan */
-    --c-write:   #F59E0B;   /* 回寫 orange */
+    /* Apple system palette */
+    --c-read:    #007AFF;   /* 讀懂 · Apple Blue */
+    --c-analyze: #5E5CE6;   /* 分析 · Apple Indigo */
+    --c-design:  #FF2D55;   /* 設計 · Apple Pink */
+    --c-build:   #FF9500;   /* 實作 · Apple Orange */
+    --c-test:    #34C759;   /* 測試 · Apple Green */
+    --c-review:  #5AC8FA;   /* 審查 · Apple Cyan */
+    --c-write:   #FF9F0A;   /* 回寫 · Apple Amber */
 
-    --c-openspec: #F472B6;
-    --c-super:    #A78BFA;
+    --c-openspec: #FF2D55;  /* brand · Pink */
+    --c-super:    #5E5CE6;  /* brand · Indigo */
+    --accent:     #0071E3;  /* primary interactive */
 
-    --good:  #34D399;
-    --warn:  #FBBF24;
-    --bad:   #F87171;
-    --info:  #60A5FA;
+    --good:  #34C759;
+    --warn:  #FF9F0A;
+    --bad:   #FF3B30;
+    --info:  #007AFF;
 
-    --shadow-1: 0 1px 2px rgba(0,0,0,0.3);
-    --shadow-2: 0 4px 12px rgba(0,0,0,0.2);
+    --shadow-1: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-2: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-3: 0 8px 24px rgba(0,0,0,0.06);
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,17 +50,22 @@
   html { scroll-behavior: smooth; }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
-                 "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+                 "Helvetica Neue", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
     background: var(--bg);
     color: var(--text);
-    line-height: 1.75;
+    line-height: 1.6;
+    font-size: 17px;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.003em;
   }
 
   code, pre, .mono {
-    font-family: "SF Mono", "JetBrains Mono", Monaco, Menlo, monospace;
+    font-family: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Monaco, monospace;
   }
+
+  ::selection { background: rgba(0,113,227,0.2); }
 
   /* ---------- Layout ---------- */
   .app {
@@ -68,57 +81,64 @@
     height: 100vh;
     overflow-y: auto;
     background: var(--bg-2);
-    border-right: 1px solid var(--border);
-    padding: 28px 18px;
+    border-right: 1px solid var(--border-light);
+    padding: 32px 20px;
     font-size: 0.88rem;
   }
+  aside.toc::-webkit-scrollbar { width: 8px; }
+  aside.toc::-webkit-scrollbar-track { background: transparent; }
+  aside.toc::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
   aside.toc .brand {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--c-super);
-    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.02em;
     margin-bottom: 4px;
   }
   aside.toc .brand-sub {
     font-size: 0.72rem;
     color: var(--text-dim);
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-light);
+    font-weight: 400;
   }
   aside.toc h4 {
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: 0.68rem;
+    font-weight: 600;
     color: var(--text-dim);
-    letter-spacing: 0.12em;
-    margin: 18px 0 8px 4px;
+    letter-spacing: 0.08em;
+    margin: 20px 0 8px 6px;
     text-transform: uppercase;
   }
   aside.toc a {
     display: block;
     color: var(--text-muted);
     text-decoration: none;
-    padding: 5px 10px;
-    border-radius: 6px;
-    margin-bottom: 2px;
-    transition: all 0.15s;
-    font-size: 0.85rem;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1px;
+    transition: all 0.15s ease;
+    font-size: 0.875rem;
+    font-weight: 400;
   }
   aside.toc a:hover {
-    background: var(--surface);
+    background: rgba(0,0,0,0.04);
     color: var(--text);
   }
   aside.toc a.scenario {
-    padding-left: 22px;
+    padding-left: 26px;
     position: relative;
+    font-size: 0.83rem;
   }
   aside.toc a.scenario::before {
     content: attr(data-num);
     position: absolute;
-    left: 6px;
+    left: 8px;
     color: var(--text-dim);
     font-family: "SF Mono", monospace;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
+    font-weight: 500;
   }
 
   /* ---------- Main ---------- */
@@ -129,245 +149,265 @@
 
   /* ---------- Hero ---------- */
   .hero {
-    padding: 60px 48px 48px;
-    border-bottom: 1px solid var(--border);
-    background:
-      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(244,114,182,0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 80% 60% at 100% 100%, rgba(167,139,250,0.08) 0%, transparent 60%);
+    padding: 88px 64px 64px;
+    border-bottom: 1px solid var(--border-light);
+    background: linear-gradient(180deg, #FBFBFD 0%, #FFFFFF 100%);
   }
   .hero .chip {
     display: inline-block;
-    font-size: 0.75rem;
-    padding: 5px 12px;
-    background: var(--surface);
-    border: 1px solid var(--border-light);
+    font-size: 0.78rem;
+    padding: 4px 12px;
+    background: rgba(0,0,0,0.04);
     border-radius: 100px;
     color: var(--text-muted);
-    margin-bottom: 16px;
-    letter-spacing: 0.04em;
+    margin-bottom: 20px;
+    letter-spacing: 0;
+    font-weight: 500;
   }
   .hero h1 {
-    font-size: 2.3rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-    margin-bottom: 12px;
+    font-size: clamp(2.2rem, 4.5vw, 3.2rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 20px;
+    color: var(--text);
   }
   .hero h1 .gradient {
-    background: linear-gradient(90deg, var(--c-openspec) 0%, var(--c-super) 100%);
+    background: linear-gradient(95deg, var(--c-openspec) 0%, var(--c-super) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+  .hero .lead,
+  .hero p.lead {
+    color: var(--text-muted);
+    font-size: 1.15rem;
+    max-width: 720px;
+    margin-bottom: 24px;
+    letter-spacing: -0.005em;
+  }
   .hero .meta {
     display: flex;
-    gap: 18px;
+    gap: 24px;
     flex-wrap: wrap;
     font-size: 0.85rem;
     color: var(--text-dim);
-    margin-top: 14px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
   }
   .hero .meta span::before {
-    content: '●';
-    margin-right: 6px;
-    color: var(--c-openspec);
-    font-size: 0.7em;
+    content: '';
+    display: inline-block;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--c-super);
+    margin-right: 8px;
+    vertical-align: middle;
   }
 
   /* ---------- Sections ---------- */
   section {
-    padding: 48px;
-    border-bottom: 1px solid var(--border);
+    padding: 72px 64px;
+    border-bottom: 1px solid var(--border-light);
   }
   section:last-child { border-bottom: none; }
+  section:nth-of-type(even) { background: var(--bg-2); }
 
   h2 {
-    font-size: 1.7rem;
+    font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 10px;
-    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
     scroll-margin-top: 20px;
+    color: var(--text);
   }
   h2 .num {
-    color: var(--c-super);
+    color: var(--text-dim);
     font-family: "SF Mono", monospace;
-    font-size: 0.85em;
+    font-size: 0.75em;
     font-weight: 500;
-    margin-right: 10px;
+    margin-right: 12px;
+    letter-spacing: 0;
   }
   h3 {
-    font-size: 1.15rem;
+    font-size: 1.3rem;
     font-weight: 600;
-    margin: 24px 0 12px;
-    letter-spacing: -0.01em;
+    margin: 32px 0 14px;
+    letter-spacing: -0.015em;
+    color: var(--text);
   }
   h4 {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--text-muted);
-    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    margin: 18px 0 10px;
+    margin: 22px 0 10px;
   }
 
   .lead {
     color: var(--text-muted);
     max-width: 720px;
-    margin-bottom: 28px;
-    font-size: 0.98rem;
+    margin-bottom: 32px;
+    font-size: 1.05rem;
+    letter-spacing: -0.005em;
+    line-height: 1.55;
   }
 
-  p { margin-bottom: 12px; }
+  p { margin-bottom: 14px; color: var(--text); letter-spacing: -0.003em; }
   p:last-child { margin-bottom: 0; }
+  p.mute { color: var(--text-muted); }
 
   /* ---------- Code ---------- */
-  code.inline {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.86em;
+  code.inline, td code, p > code {
+    background: rgba(0,0,0,0.05);
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-size: 0.88em;
     color: var(--c-openspec);
+    font-weight: 500;
   }
   pre {
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 18px;
+    background: #1D1D1F;
+    color: #F5F5F7;
+    border-radius: var(--radius-md);
+    padding: 20px 22px;
     overflow-x: auto;
     font-size: 0.85rem;
-    line-height: 1.7;
-    margin: 12px 0;
+    line-height: 1.65;
+    margin: 16px 0;
+    box-shadow: var(--shadow-1);
   }
-  pre code { color: var(--text); }
-  pre .comment { color: var(--text-dim); }
-  pre .keyword { color: var(--c-super); }
-  pre .string { color: var(--good); }
+  pre code { color: #F5F5F7; background: none; padding: 0; }
+  pre .comment { color: #86868B; font-style: italic; }
+  pre .keyword { color: #FF6CC8; }
+  pre .string  { color: #A7EA8D; }
+  pre::-webkit-scrollbar { height: 8px; }
+  pre::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
 
   /* ---------- Tables ---------- */
   .table-wrap {
     overflow-x: auto;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    margin: 14px 0;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+    background: var(--surface);
+    margin: 18px 0;
+    box-shadow: var(--shadow-1);
   }
   table {
     width: 100%;
     border-collapse: collapse;
     min-width: 600px;
-    background: var(--surface);
-    font-size: 0.9rem;
+    background: transparent;
+    font-size: 0.93rem;
   }
   th, td {
-    padding: 11px 14px;
+    padding: 14px 18px;
     text-align: left;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
     vertical-align: top;
   }
   th {
-    background: var(--surface-2);
-    color: var(--text-muted);
+    background: transparent;
+    color: var(--text-dim);
     font-weight: 600;
-    font-size: 0.78rem;
-    letter-spacing: 0.03em;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
   }
   tr:last-child td { border-bottom: none; }
-  td code {
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 0.85em;
-    color: var(--c-openspec);
-    white-space: nowrap;
-  }
+  tr:hover td { background: rgba(0,0,0,0.015); }
+  td { color: var(--text); }
   td.step {
-    color: var(--c-super);
-    font-weight: 700;
+    color: var(--text-dim);
+    font-weight: 500;
     font-family: "SF Mono", monospace;
-    width: 40px;
+    width: 44px;
+    font-size: 0.82rem;
   }
 
-  /* Phase colors in tables */
+  /* Phase colors — Apple system tints */
   .phase-tag {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 3px 10px;
+    border-radius: 6px;
     font-size: 0.78rem;
-    font-weight: 700;
+    font-weight: 600;
     white-space: nowrap;
+    letter-spacing: 0;
   }
-  .phase-read    { background: rgba(96,165,250,0.15); color: var(--c-read); }
-  .phase-analyze { background: rgba(167,139,250,0.15); color: var(--c-analyze); }
-  .phase-design  { background: rgba(244,114,182,0.15); color: var(--c-design); }
-  .phase-build   { background: rgba(251,191,36,0.15); color: var(--c-build); }
-  .phase-test    { background: rgba(52,211,153,0.15); color: var(--c-test); }
-  .phase-review  { background: rgba(34,211,238,0.15); color: var(--c-review); }
-  .phase-write   { background: rgba(245,158,11,0.15); color: var(--c-write); }
+  .phase-read    { background: rgba(0,122,255,0.1);   color: var(--c-read); }
+  .phase-analyze { background: rgba(94,92,230,0.1);   color: var(--c-analyze); }
+  .phase-design  { background: rgba(255,45,85,0.1);   color: var(--c-design); }
+  .phase-build   { background: rgba(255,149,0,0.1);   color: var(--c-build); }
+  .phase-test    { background: rgba(52,199,89,0.1);   color: var(--c-test); }
+  .phase-review  { background: rgba(90,200,250,0.12); color: #0A84B5; }
+  .phase-write   { background: rgba(255,159,10,0.1);  color: var(--c-write); }
 
   /* ---------- Callouts ---------- */
   .callout {
+    border: 1px solid var(--border-light);
     border-left: 3px solid var(--info);
-    background: rgba(96,165,250,0.05);
-    padding: 14px 18px;
-    margin: 14px 0;
-    border-radius: 0 8px 8px 0;
-    font-size: 0.92rem;
+    background: #F5F8FD;
+    padding: 16px 20px;
+    margin: 18px 0;
+    border-radius: var(--radius-sm);
+    font-size: 0.94rem;
+    color: var(--text);
   }
-  .callout.warn { border-color: var(--warn); background: rgba(251,191,36,0.05); }
-  .callout.bad  { border-color: var(--bad); background: rgba(248,113,113,0.05); }
-  .callout.good { border-color: var(--good); background: rgba(52,211,153,0.05); }
-  .callout.tip  { border-color: var(--c-super); background: rgba(167,139,250,0.05); }
-  .callout strong { color: var(--text); }
+  .callout.warn { border-left-color: var(--warn); background: #FFF8EC; }
+  .callout.bad  { border-left-color: var(--bad); background: #FFF1F0; }
+  .callout.good { border-left-color: var(--good); background: #F0FAF2; }
+  .callout.tip  { border-left-color: var(--c-super); background: #F3F3FD; }
+  .callout strong { color: var(--text); font-weight: 600; }
   .callout .label {
-    font-size: 0.72rem;
-    font-weight: 700;
+    font-size: 0.7rem;
+    font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-right: 8px;
+    margin-right: 10px;
   }
-  .callout.warn .label { color: var(--warn); }
-  .callout.bad  .label { color: var(--bad); }
-  .callout.good .label { color: var(--good); }
+  .callout.warn .label { color: #B36A00; }
+  .callout.bad  .label { color: #C41E3A; }
+  .callout.good .label { color: #1C7C3B; }
   .callout.tip  .label { color: var(--c-super); }
   .callout.info .label { color: var(--info); }
 
   /* ---------- Scenario Card ---------- */
   .scenario {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px 32px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 32px 36px;
     margin-bottom: 24px;
     position: relative;
-    overflow: hidden;
+    box-shadow: var(--shadow-1);
+    transition: box-shadow 0.2s ease;
   }
-  .scenario::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--c-openspec) 0%, var(--c-super) 100%);
-  }
+  .scenario:hover { box-shadow: var(--shadow-2); }
   .scenario-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 14px;
+    margin-bottom: 18px;
   }
   .scenario-title {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    color: var(--text);
   }
   .scenario-title .num {
-    color: var(--c-super);
+    color: var(--text-dim);
     font-family: "SF Mono", monospace;
-    margin-right: 10px;
+    margin-right: 12px;
     font-weight: 500;
+    font-size: 0.85em;
   }
   .scenario-badges {
     display: flex;
@@ -377,59 +417,62 @@
   .badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 10px;
+    padding: 4px 12px;
     border-radius: 100px;
     font-size: 0.76rem;
-    font-weight: 600;
+    font-weight: 500;
     white-space: nowrap;
+    background: rgba(0,0,0,0.04);
+    color: var(--text);
   }
   .badge .b-label {
     color: var(--text-dim);
     margin-right: 6px;
-    font-weight: 500;
+    font-weight: 400;
   }
-  .badge.time   { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-light); }
-  .badge.risk   { background: rgba(248,113,113,0.1); color: var(--bad); border: 1px solid rgba(248,113,113,0.3); }
-  .badge.fit    { background: rgba(52,211,153,0.1); color: var(--good); border: 1px solid rgba(52,211,153,0.3); }
+  .badge.time   { background: rgba(0,0,0,0.04); color: var(--text); }
+  .badge.risk   { background: rgba(255,59,48,0.08); color: #B82315; }
+  .badge.fit    { background: rgba(52,199,89,0.1); color: #1C7C3B; }
 
   .scenario-meta {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 14px;
-    margin: 16px 0 20px;
-    padding: 14px 18px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin: 18px 0 24px;
+    padding: 18px 22px;
     background: var(--bg-2);
-    border-radius: 8px;
-    font-size: 0.88rem;
+    border-radius: var(--radius-md);
+    font-size: 0.92rem;
   }
   .scenario-meta .meta-item {
-    color: var(--text-muted);
+    color: var(--text);
   }
   .scenario-meta .meta-item .ml {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--text-dim);
     display: block;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
   }
 
   /* ---------- Decision Tree ---------- */
   .tree {
     background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px 28px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 26px 30px;
     font-family: "SF Mono", monospace;
     font-size: 0.88rem;
     line-height: 2;
     overflow-x: auto;
+    color: var(--text);
   }
-  .tree .q { color: var(--c-openspec); font-weight: 700; }
+  .tree .q { color: var(--c-openspec); font-weight: 600; }
   .tree .cond { color: var(--info); }
-  .tree .result { color: var(--good); font-weight: 600; }
-  .tree .result.warn { color: var(--warn); }
+  .tree .result { color: #1C7C3B; font-weight: 600; }
+  .tree .result.warn { color: #B36A00; }
 
   /* ---------- Cheatsheet grid ---------- */
   .cheatsheet {
@@ -446,27 +489,30 @@
   .baseline {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
-    margin: 18px 0;
+    gap: 10px;
+    margin: 22px 0;
   }
   .baseline .stage {
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-light);
     border-top: 3px solid var(--stage-color);
-    border-radius: 8px;
-    padding: 12px 10px;
+    border-radius: var(--radius-md);
+    padding: 16px 12px;
     text-align: center;
     font-size: 0.82rem;
+    box-shadow: var(--shadow-1);
   }
   .baseline .stage .label {
-    font-weight: 700;
+    font-weight: 600;
     color: var(--stage-color);
-    font-size: 0.92rem;
-    margin-bottom: 4px;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
   }
   .baseline .stage .tool {
     color: var(--text-muted);
-    font-size: 0.74rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
   }
   .baseline .stage.r  { --stage-color: var(--c-read); }
   .baseline .stage.a  { --stage-color: var(--c-analyze); }
@@ -482,82 +528,99 @@
   /* ---------- FAQ ---------- */
   details.faq {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 20px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 18px 24px;
     margin-bottom: 10px;
-    transition: border-color 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-1);
   }
-  details.faq[open] { border-color: var(--border-light); }
+  details.faq[open] {
+    border-color: var(--border);
+    box-shadow: var(--shadow-2);
+  }
   details.faq summary {
     cursor: pointer;
-    font-weight: 600;
-    font-size: 0.98rem;
+    font-weight: 500;
+    font-size: 1rem;
     color: var(--text);
     list-style: none;
     position: relative;
-    padding-left: 22px;
+    padding-left: 26px;
+    letter-spacing: -0.005em;
   }
   details.faq summary::-webkit-details-marker { display: none; }
   details.faq summary::before {
-    content: '▸';
+    content: '›';
     position: absolute;
-    left: 0;
-    color: var(--c-super);
-    transition: transform 0.2s;
+    left: 4px;
+    top: -2px;
+    color: var(--text-dim);
+    font-size: 1.3em;
+    transition: transform 0.2s ease;
   }
   details.faq[open] summary::before {
     transform: rotate(90deg);
   }
   details.faq .answer {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-light);
     color: var(--text-muted);
-    font-size: 0.92rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
   }
 
   /* ---------- Lists ---------- */
   ul.bullets, ol.bullets {
     padding-left: 22px;
-    margin: 12px 0;
+    margin: 14px 0;
   }
   ul.bullets li, ol.bullets li {
     margin-bottom: 8px;
     color: var(--text);
-    font-size: 0.95rem;
+    font-size: 0.96rem;
+    line-height: 1.55;
   }
   ul.bullets li::marker { color: var(--text-dim); }
 
+  /* ---------- Links ---------- */
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
   /* ---------- Footer ---------- */
   footer {
-    padding: 32px 48px;
+    padding: 48px 64px;
     text-align: center;
     color: var(--text-dim);
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     background: var(--bg-2);
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-light);
+    line-height: 1.7;
   }
   footer code {
-    background: var(--surface);
-    padding: 2px 6px;
-    border-radius: 4px;
+    background: rgba(0,0,0,0.04);
+    padding: 2px 7px;
+    border-radius: 5px;
     font-size: 0.92em;
+    color: var(--text-muted);
   }
 
   /* ---------- Mobile ---------- */
   @media (max-width: 900px) {
+    body { font-size: 16px; }
     .app { grid-template-columns: 1fr; }
     aside.toc {
       position: static;
       height: auto;
       border-right: none;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-light);
     }
     main { max-width: 100%; }
-    .hero, section { padding: 40px 24px; }
-    .scenario { padding: 22px 20px; }
-    footer { padding: 24px; }
+    .hero { padding: 56px 24px 44px; }
+    section { padding: 48px 24px; }
+    .scenario { padding: 24px 22px; }
+    footer { padding: 32px 24px; }
   }
 
   /* Utility */
@@ -575,8 +638,11 @@
   <div class="brand">AI DEV PLAYBOOK</div>
   <div class="brand-sub">OpenSpec × Superpowers · v1.0</div>
 
-  <h4>基礎</h4>
+  <h4>開始</h4>
   <a href="#overview">概覽</a>
+  <a href="#paths">閱讀導引 · 選路徑</a>
+
+  <h4>基礎</h4>
   <a href="#setup">0. 前提設定</a>
   <a href="#cheatsheet">1. 指令速查表</a>
   <a href="#baseline">2. 七階段標準動線</a>
@@ -603,10 +669,11 @@
   <h4>替代流程</h4>
   <a href="#gsd-only">6. 只用 GSD</a>
   <a href="#openspec-only">7. 只用 OpenSpec</a>
+  <a href="#superpowers-only">8. 只用 Superpowers</a>
 
   <h4>其他</h4>
-  <a href="#faq">8. 常見困惑</a>
-  <a href="#appendix">9. CLAUDE.md 樣板</a>
+  <a href="#faq">9. 常見困惑</a>
+  <a href="#appendix">10. CLAUDE.md 樣板</a>
 </aside>
 
 <!-- ============ Main ============ -->
@@ -628,16 +695,84 @@
   </div>
 </div>
 
+<!-- ============ Orientation / Path Selection ============ -->
+<section id="paths">
+  <h2>閱讀導引｜選擇你的路徑</h2>
+  <p class="lead">
+    這份 Playbook 有 <strong>1 條主流程 + 3 條替代流程</strong>。第一次看時，先用下面的決策樹定位你要讀哪些章節 —— 不用從頭到尾讀。
+  </p>
+
+  <h3>2 個問題決定你的路徑</h3>
+  <div class="tree">
+<span class="q">Q1. 你的專案是新的還是既有的？</span>
+├─ <span class="cond">既有專案（Brownfield）</span>  → 往下 Q2
+└─ <span class="cond">全新專案（Greenfield）</span>  → <span class="result">Section 5（Greenfield 情境）</span>
+
+<span class="q">Q2. 你最在意的痛點？</span>
+├─ <span class="cond">需要規格治理 + 團隊協作</span>    → <span class="result">Section 4（Brownfield 主流程 · OpenSpec+Superpowers）← 90% 團隊推薦</span>
+├─ <span class="cond">Context rot（長跑 session 品質降）</span> → <span class="result">Section 6（只用 GSD）</span>
+├─ <span class="cond">跨多種 AI 工具共用規格</span>       → <span class="result">Section 7（只用 OpenSpec）</span>
+└─ <span class="cond">Solo 個人專案、極簡優先</span>     → <span class="result">Section 8（只用 Superpowers）</span>
+  </div>
+
+  <h3>推薦閱讀順序</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>你的情境</th><th>必讀順序</th><th>跳過</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>既有專案 + 團隊</strong><br><span class="mute" style="font-size: 0.82rem;">（90% 情境）</span></td>
+          <td>Section 0 → 1 → 2 → 3 → 4 → 9</td>
+          <td>Section 5–8</td>
+        </tr>
+        <tr>
+          <td><strong>新專案啟動</strong></td>
+          <td>Section 0 → 5 →（MVP 後回 Section 4）</td>
+          <td>Section 6–8</td>
+        </tr>
+        <tr>
+          <td><strong>Solo 長跑專案</strong></td>
+          <td>Section 2 → 6</td>
+          <td>Section 0 (部分)、3、4、5、7、8</td>
+        </tr>
+        <tr>
+          <td><strong>想要極簡 solo setup</strong></td>
+          <td>Section 2 → 8</td>
+          <td>Section 0（部分）、3、4、5、6、7</td>
+        </tr>
+        <tr>
+          <td><strong>跨 AI 工具協作</strong></td>
+          <td>Section 2 → 7</td>
+          <td>Section 6、8</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout tip"><span class="label">不知道選哪個</span>直接走 <strong>Section 4（主流程）</strong>。90% 的情境都適用。等真的撞到特定痛點（context rot / 跨工具協作 / 極簡需求）再轉到對應的替代流程。</div>
+</section>
+
 <!-- ============ 0. Setup ============ -->
 <section id="setup">
   <h2><span class="num">00</span>前提設定</h2>
 
   <h3>0.1 工具安裝</h3>
-  <pre><code><span class="comment"># 初始化 OpenSpec（在你的 repo 根目錄執行）</span>
+  <p class="mute">需要安裝 3 個工具：OpenSpec（規格治理）、Superpowers（執行紀律）、gsd-codebase-mapper（Section 0.4 用）。</p>
+
+  <pre><code><span class="comment"># 1) 初始化 OpenSpec（在你的 repo 根目錄執行）</span>
 npx @fission-ai/openspec init
 
-<span class="comment"># 安裝 Superpowers（在 Claude Code 裡輸入）</span>
-/plugin install superpowers@claude-plugins-official</code></pre>
+<span class="comment"># 2) 安裝 Superpowers（在 Claude Code 裡輸入）</span>
+/plugin install superpowers@claude-plugins-official
+
+<span class="comment"># 3) 安裝 gsd-codebase-mapper（獨立 skill，不用裝完整 GSD）</span>
+/plugin install gsd-codebase-mapper
+
+<span class="comment"># 裝完 reload 讓 skill 生效</span>
+/reload-plugins</code></pre>
+
+  <div class="callout info"><span class="label">為什麼只裝 mapper</span>完整 GSD 適合「只用 GSD」的替代流程（Section 6）。本 Playbook 主流程（OpenSpec + Superpowers）<strong>只需要 gsd-codebase-mapper 這一個 skill</strong> 來產 <code class="inline">.gsd/*.md</code>，其他 GSD 指令不會用到。</div>
+  <div class="callout tip"><span class="label">若要走 Section 6（只用 GSD）</span>改成安裝完整 GSD：<code class="inline">git clone https://github.com/gsd-build/gsd-2 ~/.claude/skills/gsd</code>。詳見 Section 6。</div>
 
   <h3>0.2 CLAUDE.md 必備三條規則</h3>
   <p class="mute">OpenSpec 跟 Superpowers <strong>不會自動串接</strong> — 必須在 CLAUDE.md 明寫下面三條，否則 TDD 不會被觸發。</p>
@@ -671,7 +806,7 @@ No exceptions. Enforce via pre-merge Git hook.</code></pre>
 │   └── CONCERNS.md
 ├── docs/incoming-specs/       <span class="comment"># PM 交付的 spec 放這裡</span>
 ├── openspec/
-│   ├── config.yaml            <span class="comment"># 0.5 團隊級 OpenSpec 設定</span>
+│   ├── config.yaml            <span class="comment"># 0.5 專案共用的 OpenSpec 設定（Git 版控）</span>
 │   ├── specs/                 <span class="comment"># 永久規格（archive 後累積）</span>
 │   ├── changes/               <span class="comment"># 進行中的變更</span>
 │   │   └── {change-name}/
@@ -726,8 +861,8 @@ No exceptions. Enforce via pre-merge Git hook.</code></pre>
 
   <div class="callout warn"><span class="label">為什麼不可省</span>每個 feature 的 Step 1（讀懂）會引用這 7+ 份檔案，讓 OpenSpec 的 <code class="inline">/opsx:propose</code> 不會憑空設計跟既有架構打架的 schema / API。跳過這步 → AI 產出的 migration 很可能撞既有 table。</div>
 
-  <h3>0.5 設定 openspec/config.yaml</h3>
-  <p class="mute">OpenSpec 初始化（<code class="inline">npx @fission-ai/openspec init</code>）會產一份 <code class="inline">openspec/config.yaml</code>。這是 OpenSpec 專屬的控制點，定義「每次跑 <code class="inline">/opsx:*</code> 自動注入什麼 context 跟套什麼規則」。<strong>把 0.4 產出的 <code class="inline">.gsd/</code> maps 連結進來，讓 OpenSpec 指令永遠看到它們。</strong></p>
+  <h3>0.5 設定 openspec/config.yaml（專案共用設定）</h3>
+  <p class="mute">OpenSpec 初始化（<code class="inline">npx @fission-ai/openspec init</code>）會產一份 <code class="inline">openspec/config.yaml</code>。這份檔案<strong>會進 Git、被團隊共用</strong>，定義「每次跑 <code class="inline">/opsx:*</code> 自動注入什麼 context 跟套什麼規則」。<strong>把 0.4 產出的 <code class="inline">.gsd/</code> maps 連結進來，讓 OpenSpec 指令永遠看到它們。</strong></p>
 
   <h4>三個欄位</h4>
   <div class="table-wrap">
@@ -1765,6 +1900,73 @@ Source material:
 
   <div class="callout good"><span class="label">GSD 獨有優勢</span>Slice/Task 獨立 context，跑 3 天 100 個 task 最後一個 task 品質跟第一個一致。這是 OpenSpec + Superpowers 在長跑專案會遇到的最大痛點 —— GSD 原生解。</div>
   <div class="callout warn"><span class="label">GSD 的代價</span>Token 消耗大（每 task 冷啟 context）、ceremony 對小任務過重。<strong>2 小時以下的任務直接用 Claude Code 原生對話就好</strong>，不要跑 /gsd。</div>
+
+  <h3>補充：完整 Phase 指令序列（進階參考）</h3>
+  <p class="mute">熟練後精準控制每一步的指令流程。新手建議從上面 4 個情境開始，熟了再看這份 reference。</p>
+
+  <h4>3 個 Phase 的完整序列</h4>
+  <pre><code><span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># PHASE 1</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/gsd:plan-phase 1           <span class="comment"># 產 .planning/phases/phase-1/PLAN.md</span>
+/gsd:execute-phase 1        <span class="comment"># 照 PLAN.md 實作 + atomic commits</span>
+/gsd:verify-work            <span class="comment"># 驗收 Phase 1</span>
+
+<span class="comment"># （驗收如果沒過）</span>
+<span class="comment"># /gsd:debug                  抓 bug</span>
+<span class="comment"># /gsd:execute-phase 1        修完再跑一次 execute（GSD 記得你做到哪）</span>
+<span class="comment"># /gsd:verify-work            再驗</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># PHASE 2</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/gsd:plan-phase 2
+/gsd:execute-phase 2
+/gsd:verify-work
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># PHASE 3</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/gsd:plan-phase 3
+/gsd:execute-phase 3
+/gsd:verify-work
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># MILESTONE 收尾</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/gsd:complete-milestone     <span class="comment"># 歸檔到 .planning/archive/milestones/001-xxx/</span>
+                            <span class="comment"># 清 PROJECT.md 的 Active、準備下一個 milestone</span></code></pre>
+
+  <h4>輔助指令（任何時候都可插）</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>指令</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>/gsd:progress</code></td><td>看現在在哪、下一步該跑什麼</td></tr>
+        <tr><td><code>/gsd:next</code></td><td>自動推薦下一個指令（省打字）</td></tr>
+        <tr><td><code>/gsd:stats</code></td><td>看整體統計（phase 數、plan 數、時間）</td></tr>
+        <tr><td><code>/gsd:pause-work</code></td><td>中途要停，產 handoff 文件</td></tr>
+        <tr><td><code>/gsd:resume-work</code></td><td>下次回來接著做</td></tr>
+        <tr><td><code>/gsd:debug</code></td><td>驗收沒過時抓 bug</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>偷懶版（不推薦第一次用）</h4>
+  <pre><code>/gsd:autonomous             <span class="comment"># 一個指令把 3 個 phase 全跑完</span>
+                            <span class="comment"># 內部自動 plan 1 → exec 1 → verify 1 → plan 2 → ...</span></code></pre>
+
+  <div class="callout warn"><span class="label">為什麼不推薦第一次用</span><code class="inline">/gsd:autonomous</code> 一路跑到底，途中你失去介入的機會。第一個 milestone 建議<strong>逐步跑</strong>（plan → execute → verify 手動），熟悉 GSD 的節奏再切 autonomous。</div>
+
+  <h4>精簡版（省打指令）</h4>
+  <p class="mute">跑完 plan / execute / verify 其中一步後，直接打：</p>
+  <pre><code>/gsd:next                   <span class="comment"># GSD 會自動幫你下下一個該跑的指令</span></code></pre>
+
+  <div class="callout tip"><span class="label">推薦工作流</span>熟練後的懶人組合：用 <code class="inline">/gsd:plan-phase 1</code> 啟動第一個 phase，之後全程 <code class="inline">/gsd:next</code> 推進，GSD 會依狀態自動跳 <code class="inline">execute-phase</code> → <code class="inline">verify-work</code> → <code class="inline">plan-phase 2</code>...。等於拿到 <code class="inline">/gsd:autonomous</code> 的便利，但保有每步人類檢查點。</div>
 </section>
 
 <!-- ============ 7. OpenSpec-only ============ -->
@@ -1897,11 +2099,385 @@ npm test         <span class="comment"># 或對應的 test 指令</span>
 
   <div class="callout tip"><span class="label">搭其他 AI tool</span>OpenSpec 很歡迎跟其他 AI tool 搭：Cursor 寫 code、Codex 做 review、Claude Code 跑 /opsx:*。規格層統一、執行層百花齊放。</div>
   <div class="callout bad"><span class="label">最大風險</span>「沒 TDD 強制」在 3 個月後顯現 —— 回歸 bug 爆增。若團隊紀律不夠，<strong>不如加回 Superpowers</strong>，不要靠「我們會自律」。</div>
+
+  <h3>補充：完整生命週期指令序列（進階參考）</h3>
+  <p class="mute">一個 feature 從提案到封存的完整 OpenSpec 指令鏈。含人工要補的動作。</p>
+
+  <h4>單一 feature 的完整流程</h4>
+  <pre><code><span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 1：規劃（產 change artifacts）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="comment"># 情境 A：需求清楚（fast path）</span>
+/opsx:propose "功能描述 + 驗收條件"
+  <span class="comment"># → changes/{name}/proposal.md + design.md + specs/ + tasks.md</span>
+
+<span class="comment"># 情境 B：需求模糊（先探索）</span>
+/opsx:explore "主題"
+  <span class="comment"># → exploration notes，不產正式 artifact</span>
+
+<span class="comment"># 情境 C：範圍完全清楚，一次產完所有 artifact</span>
+/opsx:ff
+  <span class="comment"># → 跳過互動，直接產 proposal + design + specs + tasks</span>
+
+<span class="comment"># 【人工】review proposal + design：</span>
+<span class="comment">#   - 對 Claude 說「修改 design.md 把 X 改成 Y」</span>
+<span class="comment">#   - 或直接手動編輯對應檔案</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 2：實作（人工寫 code，OpenSpec 追進度）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/opsx:apply
+  <span class="comment"># → 開始依 tasks.md 的 checkbox 實作</span>
+
+<span class="comment"># 【人工】逐 task：</span>
+<span class="comment">#   1. 寫 failing test（team discipline 要求）</span>
+<span class="comment">#   2. 寫 code</span>
+<span class="comment">#   3. test 綠</span>
+<span class="comment">#   4. 把 tasks.md 的 [ ] 改成 [x]</span>
+<span class="comment">#   5. git commit（pre-commit hook 擋無 test 的 commit）</span>
+
+<span class="comment"># （多段實作時）</span>
+/opsx:continue
+  <span class="comment"># → 產下一個 artifact / 繼續下一個 task block</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 3：驗證 + 封存</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/opsx:verify
+  <span class="comment"># → 檢查實作是否對齊 spec（completeness / correctness / coherence）</span>
+
+<span class="comment"># 【人工】GitHub PR review（CI 強制）</span>
+<span class="comment">#   reviewer approve → merge</span>
+
+/opsx:archive
+  <span class="comment"># → 合併 changes/{name}/specs/ 到永久 openspec/specs/</span>
+  <span class="comment"># → 搬 changes/{name}/ 到 changes/archive/</span>
+  <span class="comment"># → 這步沒做 = 規格跟 code 脫鉤，下個 sprint 會炸</span></code></pre>
+
+  <h4>Sprint / 批次層級指令</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>指令</th><th>何時用</th></tr></thead>
+      <tbody>
+        <tr><td><code>/opsx:onboard</code></td><td>Brownfield 第一次導入：為既有 code 反推初始 specs/（只跑一次）</td></tr>
+        <tr><td><code>/opsx:new</code></td><td>展開模式：精細控制要產哪些 artifact（大型變更）</td></tr>
+        <tr><td><code>/opsx:bulk-archive</code></td><td>Sprint 結束，一次 archive 多個已完成 change</td></tr>
+        <tr><td><code>/opsx:sync</code></td><td>手動 reconcile delta specs 到主規格（衝突處理）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Bug fix 的精簡版</h4>
+  <pre><code><span class="comment"># Bug 不改規格 → 不走 OpenSpec</span>
+<span class="comment">#   直接改 code + 加 regression test + PR → 不 propose、不 archive</span>
+
+<span class="comment"># Bug 會改規格 → 輕量走 OpenSpec</span>
+/opsx:propose "fix: {bug 描述}"
+  <span class="comment"># → 產 minimal proposal（~50 行）</span>
+
+/opsx:apply
+<span class="comment"># 【人工】寫 failing test 重現 bug → 修 → green → regression test</span>
+
+/opsx:archive</code></pre>
+
+  <div class="callout tip"><span class="label">決策樹：用哪個 propose 變體</span>
+    <ul class="bullets" style="margin-top: 8px;">
+      <li>需求清楚 → <code>/opsx:propose</code>（fast path）</li>
+      <li>需求模糊 → <code>/opsx:explore</code>（先調研）</li>
+      <li>範圍確定、想一次產完 → <code>/opsx:ff</code>（fast-forward）</li>
+      <li>大型變更、要精細控制 → <code>/opsx:new</code>（展開模式）</li>
+    </ul>
+  </div>
+
+  <div class="callout warn"><span class="label">硬規則複習</span><code class="inline">/opsx:archive</code> 是這條路徑唯一的「硬閘門」。PR merge 前必跑 —— 沒 archive = spec 漂移 = 下次 AI 寫出跟現況不符的 code。</div>
 </section>
 
-<!-- ============ 5. FAQ ============ -->
+<!-- ============ 8. Superpowers-only ============ -->
+<section id="superpowers-only">
+  <h2><span class="num">08</span>替代流程：只用 Superpowers</h2>
+  <p class="lead">
+    放棄 OpenSpec 的規格治理，只用 <strong>Superpowers</strong> 的開發紀律。<strong>最輕量的選擇</strong>，適合 solo / 個人專案 / 快速實驗。
+  </p>
+
+  <h3>適用情境</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>✅ 適合</th><th>❌ 不適合</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>
+            <ul class="bullets">
+              <li>Solo dev / 個人專案</li>
+              <li>小型 MVP / 快速 prototype</li>
+              <li>開發者是唯一規格來源（無 PM）</li>
+              <li>不需要跨 feature 累積永久規格</li>
+              <li>Hackathon / 實驗性專案</li>
+            </ul>
+          </td>
+          <td>
+            <ul class="bullets">
+              <li>多人團隊（規格無處對齊）</li>
+              <li>Brownfield 大型 codebase</li>
+              <li>需要規格可追溯 / 合規</li>
+              <li>PM 寫 spec 的工作流</li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Trade-offs</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>類別</th><th>得到</th><th>失去</th></tr></thead>
+      <tbody>
+        <tr><td>輕量度</td><td>極簡，幾乎無 ceremony</td><td>—</td></tr>
+        <tr><td>TDD</td><td>強制 red-green-refactor</td><td>—</td></tr>
+        <tr><td>Review</td><td>Two-stage subagent review 內建</td><td>—</td></tr>
+        <tr><td>Debug</td><td>systematic-debugging 4 階段流程</td><td>—</td></tr>
+        <tr><td>規格治理</td><td>—</td><td>proposal / archive / change isolation 全沒</td></tr>
+        <tr><td>PM 友好度</td><td>—</td><td>無 PM-readable 格式</td></tr>
+        <tr><td>長跑管理</td><td>—</td><td>無 context rot 管理</td></tr>
+        <tr><td>可追溯</td><td>靠 commit message + git log</td><td>無 structured spec history</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>七階段對應（純 Superpowers skills）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>階段</th><th>Superpowers skill</th><th>產出</th></tr></thead>
+      <tbody>
+        <tr><td><span class="phase-tag phase-read">讀懂</span></td><td><code>brainstorming</code>（Socratic）</td><td>design-notes.md</td></tr>
+        <tr><td><span class="phase-tag phase-analyze">分析</span></td><td><code>brainstorming</code>（更深度追問）</td><td>refined notes</td></tr>
+        <tr><td><span class="phase-tag phase-design">設計</span></td><td><code>writing-plans</code></td><td>plan.md（2–5 分鐘 task 粒度）</td></tr>
+        <tr><td><span class="phase-tag phase-build">實作</span></td><td><code>executing-plans</code> + <code>test-driven-development</code></td><td>code + tests（每 task 先 failing test 再 code）</td></tr>
+        <tr><td><span class="phase-tag phase-test">測試</span></td><td><code>test-driven-development</code> + <code>verification-before-completion</code></td><td>green tests + 驗收清單通過</td></tr>
+        <tr><td><span class="phase-tag phase-review">審查</span></td><td><code>subagent-driven-development</code> + <code>requesting-code-review</code></td><td>PR + review</td></tr>
+        <tr><td><span class="phase-tag phase-write">回寫</span></td><td><code>finishing-a-development-branch</code></td><td>merged PR + <strong>手動 CHANGELOG</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warn"><span class="label">特別注意</span>跟「只用 OpenSpec」剛好相反：Superpowers 強制開發紀律（TDD / review），但<strong>沒有規格治理</strong>。這意味著：feature 做完的「spec 在哪」靠你自己維護（ADR folder / README / git log）。</div>
+
+  <h3>情境（4 個）</h3>
+
+  <h4>SP-1｜新功能（完整流程）</h4>
+  <pre><code><span class="comment"># 全程在 Claude Code 的一次對話中進行</span>
+
+<span class="comment"># 讀懂 + 分析</span>
+<span class="string">啟動 brainstorming skill，主題 "{功能描述}"</span>
+  → 產 design-notes.md
+
+<span class="comment"># 設計</span>
+<span class="string">啟動 writing-plans skill，依 design-notes 拆 task</span>
+  → 產 plan.md（2–5 分鐘的 task 粒度）
+
+<span class="comment"># 實作（強制 TDD）</span>
+<span class="string">啟動 executing-plans skill + test-driven-development</span>
+  → 逐 task：先寫 failing test → 寫 code → refactor
+  → 每 task 完成後自動 commit
+
+<span class="comment"># 測試</span>
+<span class="string">啟動 verification-before-completion</span>
+  → 執行驗收 checklist
+
+<span class="comment"># 審查</span>
+<span class="string">啟動 subagent-driven-development</span>
+  → 開 subagent 讀 diff 找問題
+
+<span class="comment"># 回寫</span>
+<span class="string">啟動 finishing-a-development-branch</span>
+  → 決定 merge / PR / cleanup
+  → <strong>手動更新 CHANGELOG.md 或 ADR</strong></code></pre>
+
+  <h4>SP-2｜小改動</h4>
+  <pre><code><span class="comment"># 跳過 brainstorming + writing-plans</span>
+<span class="comment"># 直接 test-driven-development</span>
+<span class="string">啟動 test-driven-development，加一個 log at src/foo.ts line 42</span>
+  → 寫 failing test 驗證 log 出現
+  → 加 log
+  → 驗證 test 綠</code></pre>
+
+  <h4>SP-3｜Bug Fix（systematic-debugging）</h4>
+  <pre><code><span class="comment"># 4 階段 root cause 流程</span>
+<span class="string">啟動 systematic-debugging skill</span>
+  1. 重現 bug（必要前提）
+  2. 提出 root cause 假設
+  3. 測試假設
+  4. 驗證 fix
+
+<span class="comment"># 接上 TDD</span>
+<span class="string">啟動 test-driven-development</span>
+  → 把 root cause 寫成 regression test（failing）
+  → 修 code 讓 test 綠
+  → 驗證 fix</code></pre>
+
+  <h4>SP-4｜Hotfix（縮短版 SP-3）</h4>
+  <pre><code><span class="comment"># 最精簡，只啟動兩個 skill</span>
+<span class="string">systematic-debugging + test-driven-development</span>
+
+<span class="comment"># 快速：重現 → 寫 failing test → 修 → 部署</span>
+<span class="comment"># 不跑 subagent review（緊急上線不等）</span>
+<span class="comment"># 事後補 review + CHANGELOG</span></code></pre>
+
+  <h3>跟其他組合的比較</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>vs 組合</th><th>差在哪</th></tr></thead>
+      <tbody>
+        <tr><td>OpenSpec + Superpowers（主流程）</td><td>沒 <code>/opsx:propose/apply/archive</code> 的規格檔</td></tr>
+        <tr><td>只用 OpenSpec</td><td>有 TDD 強制、有 subagent review；但沒規格治理</td></tr>
+        <tr><td>只用 GSD</td><td>無 context rot 管理、無 milestone 結構；但有 TDD</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout bad"><span class="label">最常踩的坑</span>
+    <ul class="bullets" style="margin-top: 8px;">
+      <li>沒有 spec，feature 一多就不記得「為什麼這樣設計」→ 手動維持 <code>docs/adr/</code> folder</li>
+      <li>計畫沒被版本化，refactor 時找不到當初的 plan → 每個 feature branch 保留 plan.md 到 merge 後</li>
+      <li>跨 feature 沒有 consistency check → 靠 <code>CONSTITUTION.md</code></li>
+    </ul>
+  </div>
+  <div class="callout good"><span class="label">小專案甜蜜點</span>如果你是 solo dev 做個人專案、沒有 PM、沒有 3+ 人要 sync，這條路 <strong>setup 最快、ceremony 最輕</strong>。日後要升級到主流程時，把 CONSTITUTION / ADR 轉成 OpenSpec 的 permanent specs 即可。</div>
+
+  <h3>補充：完整 Skill 啟動序列（進階參考）</h3>
+  <p class="mute">Superpowers 沒有 <code class="inline">/gsd:*</code> 或 <code class="inline">/opsx:*</code> 那種 slash command —— skills 用<strong>自然語言啟動</strong>（「啟動 xxx skill」）。下面是一個 feature 從發想到合併的完整 skill 鏈。</p>
+
+  <h4>單一 feature 的完整 Skill 序列</h4>
+  <pre><code><span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 1：構想（Socratic 精煉需求）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="string">啟動 brainstorming skill</span>
+  <span class="comment"># → Claude 用 forcing questions 質問你</span>
+  <span class="comment"># → 產 design-notes.md（sectioned 供你驗證）</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 2：規劃</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="string">啟動 writing-plans skill</span>
+  <span class="comment"># → 依 design-notes 拆 task（每 task 2-5 分鐘工作量）</span>
+  <span class="comment"># → 產 plan.md，含精確 file paths + test strategy</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 3：建 isolated workspace</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="string">啟動 using-git-worktrees skill</span>
+  <span class="comment"># → 建 feature branch + isolated worktree</span>
+  <span class="comment"># → 跑 project setup + verify clean test baseline</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 4：實作（TDD 強制）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="string">啟動 executing-plans skill + test-driven-development skill</span>
+  <span class="comment"># 逐 task 跑 RED-GREEN-REFACTOR：</span>
+  <span class="comment">#   1. RED      寫 failing test</span>
+  <span class="comment">#   2. GREEN    寫最少 code 讓 test 過</span>
+  <span class="comment">#   3. REFACTOR 重構但保持 test 綠</span>
+  <span class="comment"># 每 task 完成後 auto commit + 打勾 checkpoint</span>
+
+<span class="comment"># （大型 feature 可平行）</span>
+<span class="string">啟動 dispatching-parallel-agents skill</span>
+  <span class="comment"># → 開多個 subagent 平行處理獨立 task</span>
+
+<span class="comment"># （中途遇到 bug）</span>
+<span class="string">啟動 systematic-debugging skill</span>
+  <span class="comment"># → 4 階段：重現 → 假設 → 測試 → 驗證</span>
+  <span class="comment"># → Iron Law：沒 root cause 不能 fix</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 5：驗證</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="string">啟動 verification-before-completion skill</span>
+  <span class="comment"># → 執行驗收 checklist</span>
+  <span class="comment"># → 確認 plan.md 裡每個 task 都 done</span>
+  <span class="comment"># → 確認 test coverage / lint / type-check 全綠</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 6：審查（Two-stage review）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="string">啟動 subagent-driven-development skill</span>
+  <span class="comment"># → 開獨立 subagent 讀 full diff</span>
+  <span class="comment"># → 回報 severity-based issues（BLOCKER / MAJOR / MINOR）</span>
+  <span class="comment"># → BLOCKER 必修，MAJOR 討論，MINOR 選擇性</span>
+
+<span class="string">啟動 requesting-code-review skill</span>
+  <span class="comment"># → 產 PR description + pre-review checklist</span>
+  <span class="comment"># → 標記 risk areas 讓人類 reviewer focus</span>
+
+<span class="comment"># （收到人類 reviewer 回饋後）</span>
+<span class="string">啟動 receiving-code-review skill</span>
+  <span class="comment"># → 整合回饋、分類 action items</span>
+  <span class="comment"># → 回到階段 4 修 + verify，再進階段 6</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 7：收尾</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="string">啟動 finishing-a-development-branch skill</span>
+  <span class="comment"># → 三種決策：merge / push PR / discard</span>
+  <span class="comment"># → cleanup worktree + delete branch</span>
+
+<span class="comment"># 【人工】更新 CHANGELOG.md / ADR</span>
+<span class="comment">#   （Superpowers 沒有 archive 機制，這步手動）</span></code></pre>
+
+  <h4>精簡版：小改動 / bug fix</h4>
+  <pre><code><span class="comment"># 小改動（&lt; 2h）：跳過 brainstorming + writing-plans</span>
+<span class="string">啟動 test-driven-development skill</span>
+<span class="string">啟動 verification-before-completion skill</span>
+
+<span class="comment"># Bug fix：debug 為主</span>
+<span class="string">啟動 systematic-debugging skill</span>        <span class="comment"># 先找 root cause</span>
+<span class="string">啟動 test-driven-development skill</span>      <span class="comment"># 寫 regression test + 修</span>
+<span class="string">啟動 subagent-driven-development skill</span>  <span class="comment"># 審查</span>
+
+<span class="comment"># Hotfix：最精簡</span>
+<span class="string">啟動 systematic-debugging + test-driven-development</span>
+<span class="comment"># 事後再補 subagent review + CHANGELOG</span></code></pre>
+
+  <h4>Skill 速查表</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>類別</th><th>Skill</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="2"><strong>構想</strong></td><td><code>brainstorming</code></td><td>Socratic 精煉需求</td></tr>
+        <tr><td><code>writing-plans</code></td><td>拆 task（2-5 分鐘粒度）</td></tr>
+        <tr><td rowspan="3"><strong>實作</strong></td><td><code>using-git-worktrees</code></td><td>建 isolated workspace</td></tr>
+        <tr><td><code>executing-plans</code></td><td>批次執行 + checkpoints</td></tr>
+        <tr><td><code>test-driven-development</code></td><td>RED-GREEN-REFACTOR 強制</td></tr>
+        <tr><td><strong>平行</strong></td><td><code>dispatching-parallel-agents</code></td><td>多 subagent 並行</td></tr>
+        <tr><td><strong>Debug</strong></td><td><code>systematic-debugging</code></td><td>4 階段 root cause</td></tr>
+        <tr><td><strong>驗證</strong></td><td><code>verification-before-completion</code></td><td>完成前驗收 checklist</td></tr>
+        <tr><td rowspan="3"><strong>審查</strong></td><td><code>subagent-driven-development</code></td><td>獨立 subagent 找 bug</td></tr>
+        <tr><td><code>requesting-code-review</code></td><td>Pre-review checklist</td></tr>
+        <tr><td><code>receiving-code-review</code></td><td>整合 reviewer 回饋</td></tr>
+        <tr><td><strong>收尾</strong></td><td><code>finishing-a-development-branch</code></td><td>merge / PR / cleanup 決策</td></tr>
+        <tr><td><strong>Meta</strong></td><td><code>using-superpowers</code></td><td>框架導覽</td></tr>
+        <tr><td><strong>Meta</strong></td><td><code>writing-skills</code></td><td>創造新 skill</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout tip"><span class="label">懶人啟動法</span>不用每個 skill 都明確打「啟動 XXX skill」。第一次啟動 <code class="inline">using-superpowers</code> 之後，Claude 會<strong>自動在適當階段提示你切換 skill</strong>。熟練後只需在階段轉換時 confirm 一下即可。</div>
+
+  <div class="callout warn"><span class="label">沒有 archive 的代價</span>所有 skills 結束後，你拿到 merged PR 跟 git log，但<strong>沒有 permanent spec</strong>。半年後新人問「為什麼這樣設計」→ 只能翻 git log + PR description。若覺得這是問題 → 升級到主流程（Section 4），加回 OpenSpec 的 archive 機制。</div>
+</section>
+
+<!-- ============ 9. FAQ ============ -->
 <section id="faq">
-  <h2><span class="num">08</span>常見困惑</h2>
+  <h2><span class="num">09</span>常見困惑</h2>
 
   <details class="faq">
     <summary>Q1. 為什麼不能跳過 <code>/opsx:archive</code>？</summary>
@@ -1974,7 +2550,7 @@ npm test         <span class="comment"># 或對應的 test 指令</span>
 
 <!-- ============ 6. Appendix ============ -->
 <section id="appendix">
-  <h2><span class="num">09</span>附錄：CLAUDE.md 樣板</h2>
+  <h2><span class="num">10</span>附錄：CLAUDE.md 樣板</h2>
   <p class="lead">直接貼到專案根目錄的 <code class="inline">CLAUDE.md</code>：</p>
 
   <pre><code><span class="keyword"># AI-Assisted Development Rules</span>
