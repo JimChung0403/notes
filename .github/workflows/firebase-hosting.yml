@@ -1,0 +1,39 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  deploy_preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy preview channel
+        uses: FirebaseExtended/action-hosting-deploy@v0.10.0
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JIM_NOTED }}"
+          projectId: jim-noted
+          entryPoint: .
+          expires: 30d
+
+  deploy_live:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy live channel
+        uses: FirebaseExtended/action-hosting-deploy@v0.10.0
+        with:
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JIM_NOTED }}"
+          projectId: jim-noted
+          channelId: live
+          entryPoint: .
