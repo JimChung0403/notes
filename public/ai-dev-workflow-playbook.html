@@ -29,6 +29,8 @@
 
     --c-openspec: #FF2D55;  /* brand · Pink */
     --c-super:    #5E5CE6;  /* brand · Indigo */
+    --c-speckit:  #0891B2;  /* brand · Teal */
+    --c-gsd:      #7C3AED;  /* brand · Violet */
     --accent:     #0071E3;  /* primary interactive */
 
     --good:  #34C759;
@@ -476,6 +478,44 @@
   .tree .result { color: #1C7C3B; font-weight: 600; }
   .tree .result.warn { color: #B36A00; }
 
+  /* ---------- Capability matrix ---------- */
+  table.matrix th,
+  table.matrix td {
+    text-align: center;
+    vertical-align: top;
+  }
+  table.matrix tbody td:first-child {
+    text-align: left;
+    white-space: nowrap;
+  }
+  table.matrix .matrix-note {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.76rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+  table.matrix .total-row td {
+    border-top: 2px solid var(--border);
+    background: var(--bg-2);
+    font-size: 1rem;
+  }
+  .score-0 { color: #991B1B; }
+  .score-1 { color: #DC2626; }
+  .score-2 { color: #D97706; }
+  .score-3 { color: #6B7280; }
+  .score-4 { color: #059669; }
+  .score-5 { color: #047857; }
+  strong.score-0,
+  strong.score-1,
+  strong.score-2,
+  strong.score-3,
+  strong.score-4,
+  strong.score-5 {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
   /* ---------- Cheatsheet grid ---------- */
   .cheatsheet {
     display: grid;
@@ -628,6 +668,8 @@
   /* Utility */
   .hl-openspec { color: var(--c-openspec); }
   .hl-super    { color: var(--c-super); }
+  .hl-speckit  { color: var(--c-speckit); }
+  .hl-gsd      { color: var(--c-gsd); }
   .mute { color: var(--text-muted); }
 </style>
 </head>
@@ -672,10 +714,12 @@
   <a href="#gsd-only">6. 只用 GSD</a>
   <a href="#openspec-only">7. 只用 OpenSpec</a>
   <a href="#superpowers-only">8. 只用 Superpowers</a>
+  <a href="#speckit-only">9. 只用 SpecKit</a>
+  <a href="#matrix">10. 能力矩陣</a>
 
   <h4>其他</h4>
-  <a href="#faq">9. 常見困惑</a>
-  <a href="#appendix">10. CLAUDE.md 樣板</a>
+  <a href="#faq">11. 常見困惑</a>
+  <a href="#appendix">12. CLAUDE.md 樣板</a>
 </aside>
 
 <!-- ============ Main ============ -->
@@ -711,10 +755,11 @@
 └─ <span class="cond">全新專案（Greenfield）</span>  → <span class="result">Section 5（Greenfield 情境）</span>
 
 <span class="q">Q2. 你最在意的痛點？</span>
-├─ <span class="cond">需要規格治理 + 團隊協作</span>    → <span class="result">Section 4（Brownfield 主流程 · OpenSpec+Superpowers）← 90% 團隊推薦</span>
+├─ <span class="cond">需要規格治理 + 團隊協作</span>       → <span class="result">Section 4（Brownfield 主流程 · OpenSpec+Superpowers）← 90% 團隊推薦</span>
 ├─ <span class="cond">Context rot（長跑 session 品質降）</span> → <span class="result">Section 6（只用 GSD）</span>
-├─ <span class="cond">跨多種 AI 工具共用規格</span>       → <span class="result">Section 7（只用 OpenSpec）</span>
-└─ <span class="cond">Solo 個人專案、極簡優先</span>     → <span class="result">Section 8（只用 Superpowers）</span>
+├─ <span class="cond">跨多種 AI 工具共用、輕量規格</span>    → <span class="result">Section 7（只用 OpenSpec）</span>
+├─ <span class="cond">Solo 個人專案、極簡優先</span>        → <span class="result">Section 8（只用 Superpowers）</span>
+└─ <span class="cond">全新專案、需要強治理 + 合約產物</span> → <span class="result">Section 9（只用 SpecKit）</span>
   </div>
 
   <h3>推薦閱讀順序</h3>
@@ -2477,9 +2522,443 @@ npm test         <span class="comment"># 或對應的 test 指令</span>
   <div class="callout warn"><span class="label">沒有 archive 的代價</span>所有 skills 結束後，你拿到 merged PR 跟 git log，但<strong>沒有 permanent spec</strong>。半年後新人問「為什麼這樣設計」→ 只能翻 git log + PR description。若覺得這是問題 → 升級到主流程（Section 4），加回 OpenSpec 的 archive 機制。</div>
 </section>
 
-<!-- ============ 9. FAQ ============ -->
+<!-- ============ 9. SpecKit-only ============ -->
+<section id="speckit-only">
+  <h2><span class="num">09</span>替代流程：只用 SpecKit</h2>
+  <p class="lead">
+    放棄 OpenSpec 和 Superpowers，只用 GitHub 官方的 <strong class="hl-speckit">SpecKit</strong> 做規格治理。
+    最「<strong>重治理、強合約</strong>」的選擇 —— 有明確的 constitution 層 + spec / plan / tasks 三件組 + 原生 contracts 產物。適合新專案從 Day 0 就把規格當 source of truth。
+  </p>
+
+  <h3>適用情境</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>✅ 適合</th><th>❌ 不適合</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>
+            <ul class="bullets">
+              <li><strong>Greenfield 新專案</strong>想一次把治理層（constitution）做紮實</li>
+              <li>跨多種 AI 工具共用規格（Copilot / Claude Code / Cursor / Gemini / Codex 同一份 .specify/）</li>
+              <li>需要明確「<strong>合約層</strong>」產物（<code>contracts/</code>、<code>data-model.md</code>）</li>
+              <li>合規 / 強治理需求（金融、醫療、政府專案）</li>
+              <li>團隊想要 <code>/clarify</code>、<code>/analyze</code> 這種顯式 gate 指令</li>
+              <li>偏好「每 feature 多份檔案、職責清楚」勝過「單檔 proposal 打包」</li>
+            </ul>
+          </td>
+          <td>
+            <ul class="bullets">
+              <li>Solo 個人專案（太重，<code>.specify/</code> 產物量大）</li>
+              <li>既有專案 Brownfield 反推（SpecKit 沒有 OpenSpec 的 <code>/opsx:onboard</code> 對應指令）</li>
+              <li>團隊排斥 constitution 層治理</li>
+              <li>想要工具強制 TDD / subagent review（SpecKit 不覆蓋）</li>
+              <li>偏好最小 ceremony（OpenSpec 更輕）</li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Trade-offs：得到什麼，失去什麼</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>類別</th><th>得到</th><th>失去</th></tr></thead>
+      <tbody>
+        <tr><td><strong>治理層</strong></td><td><code>.specify/memory/constitution.md</code> 全域原則，所有 feature 都對齊</td><td>團隊要先協調出 constitution，否則空轉</td></tr>
+        <tr><td><strong>產物細緻度</strong></td><td>spec / plan / tasks 分三檔 + <code>contracts/</code> + <code>data-model.md</code> + <code>research.md</code> 原生</td><td>檔案數量多、維護成本高</td></tr>
+        <tr><td><strong>Gate 指令</strong></td><td><code>/speckit.clarify</code>、<code>/speckit.analyze</code> 兩個明確關卡</td><td>流程較長（新增兩個 step）</td></tr>
+        <tr><td><strong>跨 AI 工具</strong></td><td>官方支援 30+ AI agent（含 Copilot / Claude Code / Cursor / Gemini / Codex）</td><td>特定工具的原生優化（如 Claude Code 的 skill 系統）</td></tr>
+        <tr><td><strong>實作紀律</strong></td><td>—</td><td>無 TDD 強制、無 subagent review、無 archive 概念（規格永遠住 <code>.specify/specs/</code>）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>七階段對應（SpecKit 指令 + 人工紀律）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>階段</th><th>SpecKit 指令</th><th>需人工補的部分</th></tr></thead>
+      <tbody>
+        <tr><td><span class="phase-tag phase-read">讀懂</span></td><td><code>/speckit.specify</code></td><td>—（SpecKit 強項：直接產 user story + 驗收條件）</td></tr>
+        <tr><td><span class="phase-tag phase-analyze">分析</span></td><td><code>/speckit.clarify</code> <span class="mute">（Q&amp;A 消除規格歧義）</span></td><td>—（SpecKit 內建 clarify Gate）</td></tr>
+        <tr><td><span class="phase-tag phase-design">設計</span></td><td><code>/speckit.plan</code> → 產 <code>plan.md</code> + <code>contracts/</code> + <code>data-model.md</code> + <code>research.md</code></td><td>—（合約 / 資料模型是原生產物）</td></tr>
+        <tr><td><span class="phase-tag phase-build">實作</span></td><td><code>/speckit.tasks</code> → <code>/speckit.implement</code></td><td><strong>人工強制 TDD</strong>（SpecKit 不管 test-first）<br>pre-commit hook 擋無 test 的 commit</td></tr>
+        <tr><td><span class="phase-tag phase-test">測試</span></td><td>—（SpecKit 不覆蓋）</td><td><strong>人工寫 test 全包</strong>：unit / integration / E2E</td></tr>
+        <tr><td><span class="phase-tag phase-review">審查</span></td><td><code>/speckit.analyze</code> <span class="mute">（cross-artifact 一致性檢查）</span></td><td><strong>人工 GitHub PR review</strong><br>可選：跨 AI tool 做 code review（Cursor / Codex）</td></tr>
+        <tr><td><span class="phase-tag phase-write">回寫</span></td><td>—（SpecKit <strong>無 archive 概念</strong>，規格永遠住 <code>.specify/specs/{feature}/</code>）</td><td>—（但要人工維護 spec 跟 code 的一致）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warn"><span class="label">關鍵補洞</span>SpecKit 強規格治理，但「實作紀律 / 測試 / subagent review」不覆蓋 → 跟 OpenSpec 一樣變成<strong>團隊紀律問題</strong>。三個補救必做：
+    <ol class="bullets" style="margin-top: 8px;">
+      <li>Pre-commit hook 擋無 test 的 commit</li>
+      <li>CI 要求 test coverage ≥ 某閾值</li>
+      <li>GitHub branch protection 強制 PR review + <code>/speckit.analyze</code> pass</li>
+    </ol>
+  </div>
+
+  <h3>情境（4 個）</h3>
+
+  <h4>SK-1｜Day 0 全新專案啟動</h4>
+  <pre><code><span class="comment"># 步驟 1：安裝 + 初始化</span>
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+specify init my-project
+cd my-project
+
+<span class="comment"># 步驟 2：建 constitution（只做一次，團隊共識後定）</span>
+/speckit.constitution
+  → .specify/memory/constitution.md
+  <span class="comment"># 【人工】review 並定稿：專案原則、coding standard、合規要求</span>
+
+<span class="comment"># 步驟 3：第一個 feature 走完整流程（見 SK-2）</span></code></pre>
+
+  <h4>SK-2｜新功能（完整流程）</h4>
+  <pre><code><span class="comment"># 讀懂：寫規格</span>
+/speckit.specify "通知系統：支援 email + push，依使用者偏好分派"
+  → .specify/specs/{FEATURE_ID}/spec.md
+  <span class="comment"># user story + 驗收條件</span>
+
+<span class="comment"># 分析：消除歧義（強烈建議）</span>
+/speckit.clarify
+  <span class="comment"># → 互動 Q&amp;A，把 spec.md 裡模糊的點問清楚</span>
+  <span class="comment"># → 更新 spec.md</span>
+
+<span class="comment"># 設計：技術方案</span>
+/speckit.plan
+  → plan.md         <span class="comment"># 技術架構</span>
+  → contracts/      <span class="comment"># API 合約 / schema</span>
+  → data-model.md   <span class="comment"># 資料模型</span>
+  → research.md     <span class="comment"># tech stack 研究</span>
+  <span class="comment"># 【人工】review contracts 跟 data-model 是否對齊 constitution</span>
+
+<span class="comment"># 實作：拆 task + 執行</span>
+/speckit.tasks
+  → tasks.md
+  <span class="comment"># 自動拆成有依賴標記、可並行標記的 task 清單</span>
+
+/speckit.implement
+  <span class="comment"># 依 tasks.md 一個個實作</span>
+  <span class="comment"># 【人工】逐 task 寫 failing test 先（TDD 紀律要自律）</span>
+
+<span class="comment"># 測試（人工）</span>
+npm test
+
+<span class="comment"># 審查：cross-artifact 一致性 gate</span>
+/speckit.analyze
+  <span class="comment"># → 檢查 spec ↔ plan ↔ tasks ↔ code 是否對齊</span>
+
+<span class="comment"># 【人工】GitHub PR review → merge</span>
+<span class="comment"># 規格留在 .specify/specs/{FEATURE_ID}/ 不搬家（無 archive）</span></code></pre>
+
+  <h4>SK-3｜Bug Fix（輕量版）</h4>
+  <pre><code><span class="comment"># Bug 不改規格 → 不走 SpecKit，直接修 + regression test</span>
+
+<span class="comment"># Bug 改規格 → 輕量走 SpecKit</span>
+/speckit.specify "fix: notification preference not persisted"
+  → 產 minimal spec.md
+<span class="comment"># 可跳過 /speckit.clarify（若 bug 描述已清楚）</span>
+
+/speckit.plan        <span class="comment"># 若需調整設計</span>
+/speckit.tasks
+/speckit.implement
+<span class="comment"># 【人工】寫 failing test 重現 → 修 → regression test</span>
+/speckit.analyze
+<span class="comment"># 【人工】PR → merge</span></code></pre>
+
+  <h4>SK-4｜跨 AI 工具協作（SpecKit 最大強項）</h4>
+  <pre><code><span class="comment"># 一份 .specify/ 給三種工具用</span>
+
+<span class="comment"># PM / 需求階段：用 Claude Code</span>
+/speckit.specify "..."      <span class="comment"># Claude Code 的 interactive mode 最強</span>
+/speckit.clarify
+
+<span class="comment"># 設計階段：用 Gemini CLI（context window 大，吃得下整個 codebase）</span>
+/speckit.plan
+
+<span class="comment"># 實作階段：用 Cursor（IDE 整合最順）</span>
+/speckit.tasks
+/speckit.implement
+
+<span class="comment"># Review：用 Codex CLI（其他 AI 二度檢查）</span>
+/speckit.analyze
+
+<span class="comment"># 產物是工具無關的 markdown，哪個工具都吃得進去</span></code></pre>
+
+  <div class="callout tip"><span class="label">SpecKit 的獨門招</span>跨 AI 工具共用 <code>.specify/</code> 是 SpecKit 最無可取代的場景。OpenSpec 也支援 24+ 工具，但 SpecKit 是<strong>GitHub 官方出品</strong>，模板更新、工具整合速度最快。</div>
+  <div class="callout bad"><span class="label">最大風險</span>「沒 archive」+ 「沒 TDD 強制」+ 「沒 subagent review」三件事都要靠團隊紀律。SpecKit 給你最強的<strong>規格治理</strong>，但<strong>實作品質</strong>完全是自律問題。</div>
+
+  <h3>補充：完整生命週期指令序列（進階參考）</h3>
+  <p class="mute">一個 feature 從 specify 到 merge 的完整 SpecKit 指令鏈。含人工要補的動作。</p>
+
+  <h4>單一 feature 的完整流程</h4>
+  <pre><code><span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 前置（專案初始化，整個專案生命只做一次）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+specify init &lt;PROJECT_NAME&gt;
+/speckit.constitution
+  <span class="comment"># → .specify/memory/constitution.md 團隊協商定稿</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 1：規格 + 澄清</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.specify "功能描述 + 驗收條件"
+  <span class="comment"># → .specify/specs/{FEATURE_ID}/spec.md</span>
+
+/speckit.clarify
+  <span class="comment"># → 互動 Q&amp;A 消除規格歧義</span>
+  <span class="comment"># → 更新 spec.md</span>
+  <span class="comment"># ⚠️ 跳過這步 = AI 在歧義下 plan → 後期返工成本高</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 2：設計（產合約 + 資料模型）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.plan
+  <span class="comment"># → plan.md (技術架構)</span>
+  <span class="comment"># → contracts/ (API schema / OpenAPI)</span>
+  <span class="comment"># → data-model.md (ER / schema)</span>
+  <span class="comment"># → research.md (tech stack 調研)</span>
+  <span class="comment"># → quickstart.md (上手指南)</span>
+
+<span class="comment"># 【人工】review：</span>
+<span class="comment">#   - contracts/ 是否對齊 API 設計原則？</span>
+<span class="comment">#   - data-model.md 是否違反 constitution？</span>
+<span class="comment">#   - 有疑慮 → 直接編輯或回跑 /speckit.plan</span>
+
+<span class="comment"># （可選）自訂品質檢查清單</span>
+/speckit.checklist
+  <span class="comment"># → 針對本 feature 的 QA checklist</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 3：任務拆解 + 實作</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.tasks
+  <span class="comment"># → tasks.md（含依賴標記、可並行標記）</span>
+
+/speckit.implement
+  <span class="comment"># → 依 tasks.md 一個個實作</span>
+
+<span class="comment"># 【人工】逐 task：</span>
+<span class="comment">#   1. 寫 failing test（SpecKit 不強制，靠團隊自律）</span>
+<span class="comment">#   2. 寫 code</span>
+<span class="comment">#   3. test 綠</span>
+<span class="comment">#   4. git commit（pre-commit hook 擋無 test 的 commit）</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 4：跨產物一致性 + 提交</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.analyze
+  <span class="comment"># → 檢查 spec ↔ plan ↔ tasks ↔ code 是否對齊</span>
+  <span class="comment"># → 有漂移 → 報告出來，人工決定是改 code 還是改 spec</span>
+
+<span class="comment"># （可選）轉 GitHub Issues 給其他人追</span>
+/speckit.taskstoissues
+  <span class="comment"># → tasks.md 內容轉成 GitHub Issues</span>
+
+<span class="comment"># 【人工】GitHub PR review（CI 強制）</span>
+<span class="comment">#   reviewer approve → merge</span>
+
+<span class="comment"># ⚠️ 無 archive 步驟 —— 規格永遠住 .specify/specs/{FEATURE_ID}/</span>
+<span class="comment">#    後續 feature 要改到這份 spec？直接編輯，或開新 feature 覆蓋</span></code></pre>
+
+  <h4>指令分層清單</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>類別</th><th>指令</th><th>產出 / 作用</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="5"><strong>必做 5 個</strong></td><td><code>/speckit.constitution</code></td><td><code>.specify/memory/constitution.md</code>（專案生命只一次）</td></tr>
+        <tr><td><code>/speckit.specify</code></td><td><code>spec.md</code> — user story + 驗收</td></tr>
+        <tr><td><code>/speckit.plan</code></td><td><code>plan.md</code> + <code>contracts/</code> + <code>data-model.md</code> + <code>research.md</code></td></tr>
+        <tr><td><code>/speckit.tasks</code></td><td><code>tasks.md</code> — 有依賴 / 並行標記</td></tr>
+        <tr><td><code>/speckit.implement</code></td><td>依 tasks.md 實作</td></tr>
+        <tr><td rowspan="4"><strong>可選強化</strong></td><td><code>/speckit.clarify</code></td><td>互動 Q&amp;A 消除規格歧義（強烈建議）</td></tr>
+        <tr><td><code>/speckit.analyze</code></td><td>cross-artifact 一致性檢查（implement 前 / PR 前）</td></tr>
+        <tr><td><code>/speckit.checklist</code></td><td>自訂 QA checklist</td></tr>
+        <tr><td><code>/speckit.taskstoissues</code></td><td>tasks.md → GitHub Issues</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout tip"><span class="label">跟 OpenSpec 的對照記憶</span>
+    <ul class="bullets" style="margin-top: 8px;">
+      <li>OpenSpec <code>/opsx:propose</code> ≈ SpecKit <code>/speckit.specify</code> + <code>/speckit.plan</code>（OpenSpec 合一，SpecKit 拆二）</li>
+      <li>OpenSpec <code>design.md</code> ≈ SpecKit <code>plan.md</code> + <code>contracts/</code> + <code>data-model.md</code>（OpenSpec 合一，SpecKit 拆三）</li>
+      <li>OpenSpec <code>/opsx:verify</code> ≈ SpecKit <code>/speckit.analyze</code></li>
+      <li>OpenSpec <code>/opsx:archive</code> ≈ <strong>無對應</strong>（SpecKit 規格永遠住 <code>.specify/specs/</code>）</li>
+    </ul>
+  </div>
+
+  <div class="callout warn"><span class="label">硬規則</span><code class="inline">/speckit.constitution</code> 一定要在專案第一個 feature 之前做。constitution 缺席 → AI 在實作階段無法判斷「這樣設計違不違反專案原則」。</div>
+</section>
+
+<!-- ============ 10. Capability Matrix ============ -->
+<section id="matrix">
+  <h2><span class="num">10</span>能力矩陣（7 階段 × 5 方案）</h2>
+  <p class="lead">
+    把前面 4 條替代流程 + 主流程放在同一張量化表。評分 0-5，讓你一眼看出：
+    <strong>選哪條路、選了之後哪些階段要靠人工補救</strong>。
+  </p>
+
+  <h3>評分標準</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>分數</th><th>定義</th><th>典型訊號</th></tr></thead>
+      <tbody>
+        <tr><td><strong class="score-0">0</strong></td><td>完全不覆蓋</td><td>沒有任何指令 / 檔案 / skill 對應此階段</td></tr>
+        <tr><td><strong class="score-1">1</strong></td><td>僅 placeholder</td><td>有檔案或目錄，但無機制推進</td></tr>
+        <tr><td><strong class="score-2">2</strong></td><td>有基本結構，全靠人工紀律</td><td>工具只追進度，品質靠 team discipline</td></tr>
+        <tr><td><strong class="score-3">3</strong></td><td>有工具輔助，半自動</td><td>有指令產草稿，仍需人工 review / 補完</td></tr>
+        <tr><td><strong class="score-4">4</strong></td><td>有專門指令 / skill，運作完整</td><td>工具原生設計涵蓋本階段</td></tr>
+        <tr><td><strong class="score-5">5</strong></td><td>最佳實作（完整自動 + 強制）</td><td>有 Gate 指令 / pre-commit / CI 等強制機制</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>能力矩陣</h3>
+  <div class="table-wrap">
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th>階段</th>
+          <th>OpenSpec + SP<br><span class="mute" style="font-weight: 400;">主流程</span></th>
+          <th>Only OpenSpec</th>
+          <th>Only Superpowers</th>
+          <th>Only GSD</th>
+          <th>Only SpecKit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="phase-tag phase-read">讀懂</span><br><span class="mute" style="font-size: 0.8rem;">理解 PM spec</span></td>
+          <td><strong class="score-4">4</strong><br><span class="matrix-note">/opsx:propose + brainstorming 雙通道</span></td>
+          <td><strong class="score-4">4</strong><br><span class="matrix-note">/opsx:propose 或 /opsx:explore</span></td>
+          <td><strong class="score-2">2</strong><br><span class="matrix-note">brainstorming skill 只導談，不落檔</span></td>
+          <td><strong class="score-4">4</strong><br><span class="matrix-note">PROJECT.md + /gsd:plan-phase 情境拆解</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">/speckit.specify 直接產 user story + 驗收</span></td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-analyze">分析</span><br><span class="mute" style="font-size: 0.8rem;">拆解 / 澄清</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">brainstorming + design.md 互補</span></td>
+          <td><strong class="score-3">3</strong><br><span class="matrix-note">design.md 自動產但無澄清機制</span></td>
+          <td><strong class="score-4">4</strong><br><span class="matrix-note">brainstorming skill 強力</span></td>
+          <td><strong class="score-3">3</strong><br><span class="matrix-note">planning phase 但無澄清 Gate</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">/speckit.clarify + /speckit.analyze 雙 Gate</span></td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-design">設計</span><br><span class="mute" style="font-size: 0.8rem;">技術方案</span></td>
+          <td><strong class="score-4">4</strong><br><span class="matrix-note">design.md，contracts 需自己加</span></td>
+          <td><strong class="score-3">3</strong><br><span class="matrix-note">design.md 但無合約 / 資料模型原生產物</span></td>
+          <td><strong class="score-2">2</strong><br><span class="matrix-note">writing-plans skill 偏執行計畫而非設計</span></td>
+          <td><strong class="score-3">3</strong><br><span class="matrix-note">S01-PLAN.md + .gsd/ARCHITECTURE.md</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">plan.md + contracts/ + data-model.md + research.md 原生</span></td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-build">實作</span><br><span class="mute" style="font-size: 0.8rem;">寫 code</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">OpenSpec 追 tasks + SP executing-plans + TDD 強制</span></td>
+          <td><strong class="score-2">2</strong><br><span class="matrix-note">tasks.md 追進度但無執行紀律</span></td>
+          <td><strong class="score-4">4</strong><br><span class="matrix-note">executing-plans + TDD skill</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">/gsd:execute-phase 有 checkpoints + context rot 防禦</span></td>
+          <td><strong class="score-3">3</strong><br><span class="matrix-note">/speckit.implement 但無 TDD 強制</span></td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-test">測試</span><br><span class="mute" style="font-size: 0.8rem;">TDD</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">SP test-driven-development skill 強制 RED-GREEN-REFACTOR</span></td>
+          <td><strong class="score-0">0</strong><br><span class="matrix-note">完全不覆蓋</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">TDD 是 SP 核心 skill</span></td>
+          <td><strong class="score-2">2</strong><br><span class="matrix-note">/gsd:verify-work 有基本檢查但不強制 TDD</span></td>
+          <td><strong class="score-1">1</strong><br><span class="matrix-note">無內建 TDD 機制</span></td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-review">審查</span><br><span class="mute" style="font-size: 0.8rem;">review</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">subagent-driven-development + requesting/receiving-code-review 三件組</span></td>
+          <td><strong class="score-1">1</strong><br><span class="matrix-note">無內建 review 機制</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">三個 review skill 完整</span></td>
+          <td><strong class="score-3">3</strong><br><span class="matrix-note">/gsd:verify-work 做基本 QA</span></td>
+          <td><strong class="score-2">2</strong><br><span class="matrix-note">/speckit.analyze 做 cross-artifact 但無 subagent</span></td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-write">回寫</span><br><span class="mute" style="font-size: 0.8rem;">archive / sync</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">/opsx:archive + finishing-a-development-branch</span></td>
+          <td><strong class="score-4">4</strong><br><span class="matrix-note">/opsx:archive 強；specs/ 永久化</span></td>
+          <td><strong class="score-2">2</strong><br><span class="matrix-note">finishing-branch skill 但無 spec 永久化</span></td>
+          <td><strong class="score-3">3</strong><br><span class="matrix-note">/gsd:complete-milestone + T01-SUMMARY.md</span></td>
+          <td><strong class="score-1">1</strong><br><span class="matrix-note">無 archive 概念；specs 永遠住 .specify/specs/</span></td>
+        </tr>
+        <tr class="total-row">
+          <td><strong>總分</strong></td>
+          <td><strong class="score-5">33 / 35</strong></td>
+          <td><strong class="score-3">17 / 35</strong></td>
+          <td><strong class="score-4">24 / 35</strong></td>
+          <td><strong class="score-4">23 / 35</strong></td>
+          <td><strong class="score-4">22 / 35</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>方案側寫：強項 vs 弱項</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>方案</th><th>最強階段（≥4）</th><th>最弱階段（≤2）</th><th>一句話定位</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>OpenSpec + SP</strong><br><span class="mute" style="font-size: 0.82rem;">主流程</span></td>
+          <td>分析 / 實作 / 測試 / 審查 / 回寫（5 項）</td>
+          <td>—</td>
+          <td>7 階段全面覆蓋，無明顯弱點</td>
+        </tr>
+        <tr>
+          <td><strong>Only OpenSpec</strong></td>
+          <td>讀懂 / 回寫</td>
+          <td>測試（0）/ 審查（1）</td>
+          <td>強規格治理、<strong>實作品質全靠自律</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Only Superpowers</strong></td>
+          <td>分析 / 實作 / 測試 / 審查</td>
+          <td>讀懂 / 設計 / 回寫</td>
+          <td>執行紀律強，<strong>無永久規格</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Only GSD</strong></td>
+          <td>讀懂 / 實作</td>
+          <td>測試（2）</td>
+          <td>Context rot 防禦最強、其他階段中等</td>
+        </tr>
+        <tr>
+          <td><strong>Only SpecKit</strong></td>
+          <td>讀懂 / 分析 / 設計</td>
+          <td>測試（1）/ 回寫（1）</td>
+          <td>前期治理最強、<strong>實作 / 收尾靠自律</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>怎麼讀這張表</h3>
+  <div class="callout tip"><span class="label">決策邏輯</span>
+    <ol class="bullets" style="margin-top: 8px;">
+      <li><strong>看總分</strong> → 主流程 33/35，其他都在 17-24 之間，差距主要在「覆蓋廣度」</li>
+      <li><strong>看弱項分布</strong> → 任何 ≤ 2 的階段<strong>必須</strong>靠團隊紀律 / CI / pre-commit hook 補救</li>
+      <li><strong>看強項互補</strong> → OS 強規格、SP 強執行、GSD 強 context、SK 強治理 → 這是為什麼主流程選 OS+SP</li>
+      <li><strong>不要只看總分</strong> → GSD 23 分但「測試」只有 2 分，若你不在意 context rot 而在意測試，GSD 不適合你</li>
+    </ol>
+  </div>
+
+  <div class="callout warn"><span class="label">評分的主觀性</span>這些分數是基於<strong>此 Playbook 的 7 階段定義</strong>做的相對評比。若你的團隊對「設計階段」定義不同（例如你只要 plan.md 就夠，不需要 contracts/），分數會浮動。表格是決策起點，不是結論。</div>
+</section>
+
+<!-- ============ 11. FAQ ============ -->
 <section id="faq">
-  <h2><span class="num">09</span>常見困惑</h2>
+  <h2><span class="num">11</span>常見困惑</h2>
 
   <details class="faq">
     <summary>Q1. 為什麼不能跳過 <code>/opsx:archive</code>？</summary>
@@ -2552,7 +3031,7 @@ npm test         <span class="comment"># 或對應的 test 指令</span>
 
 <!-- ============ 6. Appendix ============ -->
 <section id="appendix">
-  <h2><span class="num">10</span>附錄：CLAUDE.md 樣板</h2>
+  <h2><span class="num">12</span>附錄：CLAUDE.md 樣板</h2>
   <p class="lead">直接貼到專案根目錄的 <code class="inline">CLAUDE.md</code>：</p>
 
   <pre><code><span class="keyword"># AI-Assisted Development Rules</span>
