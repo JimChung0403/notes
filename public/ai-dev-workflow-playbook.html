@@ -146,7 +146,20 @@
   /* ---------- Main ---------- */
   main {
     padding: 0;
-    max-width: 960px;
+    max-width: 1120px;
+  }
+
+  /* Wide block — escape main's max-width for data-heavy tables */
+  .wide-block {
+    max-width: 1280px;
+    margin-left: -80px;
+    margin-right: -80px;
+  }
+  @media (max-width: 1440px) {
+    .wide-block { margin-left: -40px; margin-right: -40px; max-width: none; }
+  }
+  @media (max-width: 900px) {
+    .wide-block { margin-left: 0; margin-right: 0; }
   }
 
   /* ---------- Hero ---------- */
@@ -701,9 +714,11 @@
   <a href="#s6" class="scenario" data-num="6">重構 / 技術債</a>
   <a href="#s7" class="scenario" data-num="7">Spike 可行性</a>
   <a href="#s8" class="scenario" data-num="8">依賴 / 安全修補</a>
+  <a href="#brownfield-faq" style="font-weight: 600;">Brownfield 常見問題（Q1–Q8）</a>
 
   <h4>Greenfield 情境</h4>
   <a href="#greenfield">5. Greenfield 開發情境</a>
+  <a href="#greenfield-best" style="font-weight: 600;">5.0 最佳方案 SpecKit+SP</a>
   <a href="#g1" class="scenario" data-num="G1">Day 0 專案啟動</a>
   <a href="#g2" class="scenario" data-num="G2">第一個 MVP Feature</a>
   <a href="#g3" class="scenario" data-num="G3">MVP 期新功能</a>
@@ -720,6 +735,7 @@
   <h4>其他</h4>
   <a href="#faq">11. 常見困惑</a>
   <a href="#appendix">12. CLAUDE.md 樣板</a>
+  <a href="#references">13. 外部參考資料</a>
 </aside>
 
 <!-- ============ Main ============ -->
@@ -1630,6 +1646,698 @@ Source material:
     <div class="callout good"><span class="label">必 commit</span>鎖定版本檔案（<code class="inline">package-lock.json</code> / <code class="inline">poetry.lock</code>）必須 commit — 屬於回寫階段。</div>
   </div>
 
+  <!-- ============ 4.9 Brownfield Common Questions ============ -->
+  <div id="brownfield-faq" style="margin-top: 48px; padding-top: 32px; border-top: 2px solid var(--border-light);">
+    <h3 style="font-size: 1.7rem; margin-bottom: 18px;">Brownfield 常見問題</h3>
+    <p class="lead">Brownfield 情境下，OpenSpec + Superpowers 協作時最常卡的 8 個問題。每題含：問題診斷 → 手動 prompt / 修復 → 觀察訊號。</p>
+
+    <h4>成本效益速查（該投資在哪題？）</h4>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Q</th>
+            <th>痛點</th>
+            <th>錯了會怎樣</th>
+            <th>頻率</th>
+            <th>建 Command？</th>
+            <th>建 Hook？</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background: rgba(94,92,230,0.04);">
+            <td><strong>Q2</strong> apply + TDD</td>
+            <td>沒 test 覆蓋</td>
+            <td>回歸 bug 累積</td>
+            <td>每 task</td>
+            <td><strong style="color: var(--good);">✅ 已做</strong></td>
+            <td><strong style="color: var(--good);">✅ 已做</strong></td>
+          </tr>
+          <tr style="background: rgba(94,92,230,0.04);">
+            <td><strong>Q3</strong> propose + brainstorming</td>
+            <td>需求不清跑 propose</td>
+            <td>tasks.md 粒度歪、返工</td>
+            <td>每 feature</td>
+            <td><strong style="color: var(--good);">✅ 已做</strong></td>
+            <td>❌ 意義小</td>
+          </tr>
+          <tr>
+            <td><strong>Q4</strong> verify + v-b-c</td>
+            <td>只檢結構不檢行為</td>
+            <td>放行 bug 到 PR</td>
+            <td>每 change</td>
+            <td>⚠️ 可選</td>
+            <td>❌ 意義小</td>
+          </tr>
+          <tr style="background: rgba(94,92,230,0.04);">
+            <td><strong>Q5</strong> subagent review + archive</td>
+            <td>沒 review 就 archive</td>
+            <td><strong>bug 固化到永久 spec</strong></td>
+            <td>每 archive</td>
+            <td><strong style="color: var(--good);">✅ 已做</strong></td>
+            <td><strong style="color: var(--good);">✅ 已做</strong></td>
+          </tr>
+          <tr style="background: rgba(94,92,230,0.04);">
+            <td><strong>Q6</strong> finishing + archive 順序</td>
+            <td>branch / 順序錯</td>
+            <td><strong>PR 污染或 merge conflict</strong></td>
+            <td>每 change</td>
+            <td>⚠️ 可選</td>
+            <td><strong style="color: var(--good);">✅ 已做</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Q7</strong> flow 選擇</td>
+            <td>用錯流程</td>
+            <td>小題大作或累積 spec drift</td>
+            <td>每次決策</td>
+            <td>❌ 不適合</td>
+            <td>❌ 不適合</td>
+          </tr>
+          <tr style="background: rgba(94,92,230,0.04);">
+            <td><strong>Q8</strong> 跨 session 續跑</td>
+            <td>重做已完成 task</td>
+            <td>浪費時間</td>
+            <td>每新 session</td>
+            <td>⚠️ 可選</td>
+            <td>❌ 意義小</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout tip"><span class="label">優先順序</span>
+      <strong>損失不可逆 → 必做</strong>：Q2（測試）、Q5（review）、Q6（archive 順序）。
+      <strong>效率問題 → 有方案但可選</strong>：Q3、Q8（附社群 skill 可直接裝）。
+      <strong>仍用手動 prompt</strong>：Q4（行為驗證）。
+      <strong>不適合工具化</strong>：Q7（決策問題）。
+    </div>
+
+    <!-- Q1 -->
+    <details class="faq" open>
+      <summary>Q1. <code>/opsx:propose</code> 拆完 task，粒度不對怎麼辦？</summary>
+      <div class="answer">
+        <h4>判斷（5 個訊號）</h4>
+        <ol class="bullets">
+          <li><strong>數量範圍</strong>：2h 以下→2-5 個、4-8h→5-10 個、8-16h→10-15 個。超過 20 個 = 這是 epic，該拆多個 proposal。</li>
+          <li><strong>紅旗字眼</strong>：「並且 / 以及 / 同時 / 完整 / 優化 / 改善」出現 = 太粗。</li>
+          <li><strong>時間估算</strong>：甜蜜點 1-3 小時。全部 &lt; 15 分鐘 = 太細；有任一 &gt; 1 天 = 太粗。</li>
+          <li><strong>測試 task 對應</strong>：每個實作 task 必須有**獨立** test task；塞在描述裡等於沒寫（最常見漏失）。</li>
+          <li><strong>驗收條件對齊</strong>：<code class="inline">proposal.md</code> 每條驗收 → 必須對應到 <code class="inline">tasks.md</code> 某個 task。對不上 = 漏。</li>
+        </ol>
+
+        <h4>修復（從輕到重 4 條路徑）</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>路徑</th><th>做法</th><th>成本</th></tr></thead>
+            <tbody>
+              <tr><td><strong>A. 對話微調</strong>（90%）</td><td>跟 AI 說「把 task N 拆成...、把 task M-P 合併」</td><td>1-2 分鐘</td></tr>
+              <tr><td><strong>B. 手動改 + continue</strong></td><td>直接編輯 <code>tasks.md</code>，跑 <code>/opsx:continue</code></td><td>5 分鐘</td></tr>
+              <tr><td><strong>C. 重跑 propose</strong></td><td>先修 <code>proposal.md</code> 的驗收條件 → 刪舊 <code>tasks.md</code>/<code>design.md</code> → 重跑</td><td>15-30 分</td></tr>
+              <tr><td><strong>D. 退 brainstorming</strong></td><td>Section 3 模式 B：先 brainstorming skill 拆清楚，再 propose</td><td>30-60 分</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>話術模板</h4>
+        <pre><code><span class="comment"># 拆 task</span>
+把 tasks.md 的 task {N} 拆成 {M} 個獨立 task，每個都要：
+- 有明確動詞（實作 / 測試 / 建立 / 整合）+ 明確對象
+- 可在 1-3 小時內完成
+- 有獨立的驗收條件
+
+<span class="comment"># 驗收對齊</span>
+讀 proposal.md 的 Acceptance Criteria 每一條，
+確認 tasks.md 有對應的實作 + 測試 task。
+對不上的列出來，我決定怎麼改。
+
+<span class="comment"># 範圍重拆</span>
+目前這個 change 範圍太大（&gt;20 tasks），
+幫我拆成 {N} 個獨立 proposal，每個可獨立 apply + archive。
+先列出拆法讓我 review，不要改 tasks.md。</code></pre>
+
+        <div class="callout tip"><span class="label">預防</span>粒度錯 80% 是因為 propose 前沒把需求想清楚。事前：填 5 個問題（解什麼問題 / 不做會怎樣 / MVP boundary / out-of-scope / 驗收條件 BDD 格式），或先跑 <code>/opsx:explore</code>。</div>
+      </div>
+    </details>
+
+    <!-- Q2 -->
+    <details class="faq">
+      <summary>Q2. <code>/opsx:apply</code> 沒啟用 Superpowers TDD，每個 task 都直接寫完怎麼辦？</summary>
+      <div class="answer">
+        <h4>為什麼會發生</h4>
+        <p>OpenSpec 跟 Superpowers 是<strong>兩套獨立系統</strong>，<code>/opsx:apply</code> 原生<strong>不會</strong>呼叫 Superpowers 的 skill。這跟 Section 3 講「brainstorming 跟 propose 不會自動串接」是同一個問題。CLAUDE.md 的 Rule 2 若寫太軟，AI 會解讀成「某時點補 test 就好」而不是「逐 task RED→GREEN」。</p>
+
+        <h4>四種修復（可疊加）</h4>
+
+        <h5>修復 A｜改 CLAUDE.md Rule 2 強化版</h5>
+        <p class="mute">已更新到本 Playbook Section 12 附錄。重點：明確寫「每個 task」「顯示 RED output」「禁止 batching」「TDD-exempt 要顯式宣告」。觸發率約 30–50%。</p>
+
+        <h5>修復 B｜自訂 slash command <code>/opsx-apply-tdd</code></h5>
+        <p>把 TDD 流程寫死進指令。檔案放 <code>.claude/commands/opsx-apply-tdd.md</code>：</p>
+        <pre><code><span class="keyword">---</span>
+description: OpenSpec /opsx:apply wrapper with strict per-task TDD enforcement
+<span class="keyword">---</span>
+
+Execute the equivalent of /opsx:apply with STRICT per-task TDD enforcement.
+
+<span class="comment">## Per-task loop</span>
+For every unchecked task in changes/{active}/tasks.md:
+
+<span class="comment">### Step 1: Announce</span>
+Print: "━━━ Task {N}: {description} ━━━"
+
+<span class="comment">### Step 2: Activate TDD skill</span>
+Activate test-driven-development skill from Superpowers.
+
+<span class="comment">### Step 3: RED</span>
+- Write a failing test.
+- Run the test suite. Display the failing output in a code block.
+- Do NOT proceed without visible failure.
+
+<span class="comment">### Step 4: Pause</span>
+Ask: "RED confirmed. Proceed to GREEN?"
+Wait for user confirmation.
+
+<span class="comment">### Step 5: GREEN</span>
+- Write minimal code to pass. Run tests. Show passing output.
+
+<span class="comment">### Step 6: REFACTOR</span>
+- Clean up while keeping tests green.
+
+<span class="comment">### Step 7: Commit</span>
+Format: &lt;type&gt;(&lt;scope&gt;): &lt;task-description&gt;
+
+<span class="comment">### Step 8: Mark done</span>
+Edit tasks.md: [ ] → [x]
+
+<span class="comment">### Step 9: Next task</span>
+Loop Step 1.
+
+<span class="comment">## Exceptions</span>
+TDD-exempt (migration/config/rename): announce "[TDD-exempt: &lt;reason&gt;]".
+Never silently skip.
+
+<span class="comment">## Halt conditions</span>
+- User: "stop" → halt at task boundary (not mid-cycle)
+- Test infra broken → halt and report
+- No RED confirmation → halt, do not proceed to GREEN</code></pre>
+        <p class="mute">使用：打 <code>/opsx-apply-tdd</code> 代替 <code>/opsx:apply</code>。觸發率 ~70%+。</p>
+
+        <h5>修復 C｜手動 prompt（臨時用）</h5>
+        <pre><code>跑 /opsx:apply，每個 task 先寫 failing test 跑給我看（RED），
+我說 ok 再寫 code（GREEN），一個 task 一個 commit。
+不准批次跑完再補 test。
+例外：migration / config / rename 要明確說 "TDD-exempt: &lt;原因&gt;"。</code></pre>
+
+        <h5>修復 D｜UserPromptSubmit Hook（<strong>最強</strong>，觸發率 ~84%）</h5>
+        <p>alexop.dev + Scott Spence 實測 200+ prompt 發現：skill 原生觸發只有 ~20%，用 hook 可拉到 ~84%。hook 每個 prompt 都重新注入提醒，不會被長 context 淡忘。</p>
+
+        <p><strong>檔案 1</strong>：<code>~/.claude/hooks/tdd-enforcement.sh</code></p>
+        <pre><code>#!/bin/bash
+PROMPT=$(cat)
+
+if echo "$PROMPT" | grep -qE "/opsx:apply|/opsx-apply"; then
+  cat &lt;&lt;'EOF'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[AUTO-INJECTED — TDD ENFORCEMENT]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/opsx:apply detected. You MUST:
+1. Activate test-driven-development skill NOW
+2. For EACH task: RED (show failing) → WAIT → GREEN → commit
+3. NEVER batch. NEVER skip RED.
+Acknowledge before proceeding.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EOF
+fi
+exit 0</code></pre>
+        <p>然後 <code>chmod +x ~/.claude/hooks/tdd-enforcement.sh</code></p>
+
+        <p><strong>檔案 2</strong>：<code>~/.claude/settings.json</code> 加上：</p>
+        <pre><code>{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "$HOME/.claude/hooks/tdd-enforcement.sh" }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+
+        <h4>四種修復比較</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>修復</th><th>改動</th><th>永久</th><th>強制力</th><th>skill 觸發率</th></tr></thead>
+            <tbody>
+              <tr><td>A. CLAUDE.md Rule 2</td><td>1 檔</td><td>✅</td><td>中</td><td>~30–50%</td></tr>
+              <tr><td>B. <code>/opsx-apply-tdd</code></td><td>1 檔</td><td>✅</td><td>高</td><td>~70%+</td></tr>
+              <tr><td>C. 手動 prompt</td><td>每次貼</td><td>❌</td><td>高（當下）</td><td>~80%+</td></tr>
+              <tr><td><strong>D. Hook</strong></td><td>2 檔</td><td>✅</td><td><strong>最高</strong></td><td><strong>~84%</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout tip"><span class="label">推薦配置</span>A + B + D 三疊加。CLAUDE.md 做大原則、custom command 做精細流程、hook 做最終提醒。C 當「忘了配置」時的 fallback。</div>
+        <div class="callout warn"><span class="label">驗證是否生效</span>下次 <code>/opsx:apply</code> 跑第一個 task 時，要看到：(1) hook 注入的 AUTO-INJECTED 區塊、(2) TDD skill 明確啟動宣告、(3) 寫 failing test 前有停下來、(4) 看到紅色 failing output 才寫 code。有任一缺失 = 修復沒生效。</div>
+      </div>
+    </details>
+
+    <!-- Q3 -->
+    <details class="faq">
+      <summary>Q3. 分析階段：怎麼讓 <code>/opsx:propose</code> 跟 Superpowers <code>brainstorming</code> 合作？</summary>
+      <div class="answer">
+        <h4>問題</h4>
+        <p><code>/opsx:propose</code> 會直接跳到產 <code>proposal.md</code>，不會先 brainstorm 挖需求。複雜 feature 會產出空洞 / 範圍過大 / 驗收不清的 proposal。</p>
+
+        <h4>手動 prompt（三種情境）</h4>
+
+        <h5>情境 A：已有 draft、想用 brainstorm 精煉（Section 3 模式 A）</h5>
+        <pre><code>接下來先啟動 brainstorming skill，幫我挖以下 feature 的需求盲點：
+
+&lt;貼你的 feature 描述 / PM spec&gt;
+
+挖完後，整理成 4-6 條驗收條件（BDD 格式：Given / When / Then），
+然後才跑 /opsx:propose 並把驗收條件當 context。
+
+規則：
+- 每輪至少丟 3 個澄清問題（先問 who/what/when，不要問 how）
+- 我回答後再問下一輪，別跳步
+- 5 輪內收斂
+- 技術方案歧異 → 標記「待設計階段決策」</code></pre>
+
+        <h5>情境 B：需求模糊、先 explore（Section 3 模式 C）</h5>
+        <pre><code>先跑 /opsx:explore "&lt;主題&gt;" 產探索筆記，不產正式 artifact。
+完成後啟動 brainstorming skill 針對探索筆記挖需求。
+brainstorm 收斂後才跑 /opsx:propose。
+每個步驟完成都停下來確認。</code></pre>
+
+        <h5>情境 C：PM spec 清楚、怕漏邊界（輕量）</h5>
+        <pre><code>跑 /opsx:propose "&lt;feature&gt;"，產完 proposal.md 後，
+啟動 brainstorming skill 對 proposal 做 Devil's Advocate：
+- 列 3-5 個「可能漏掉的情境」
+- 列 2-3 個「scope 太大/太小的訊號」
+我 review 後再決定要不要改 proposal。</code></pre>
+
+        <h4>觀察訊號</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>✅ 成功訊號</th><th>❌ 失敗訊號</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>
+                  <ul class="bullets">
+                    <li>brainstorming skill 明確啟動</li>
+                    <li>每輪有 3+ 個具體澄清問題</li>
+                    <li>proposal 驗收條件是 brainstorm 結論的整理</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="bullets">
+                    <li>跳過 brainstorm 直接 propose</li>
+                    <li>proposal 驗收跟 brainstorm 對不上</li>
+                    <li>AI 自問自答沒等你回答</li>
+                  </ul>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>社群證據 + 現成方案</h4>
+        <ul class="bullets">
+          <li><a href="https://mcpmarket.com/tools/skills/openspec-explore">OpenSpec Explore Skill</a>（mcpmarket）—「for problem analysis / early-stage thinking partner」，社群已有專門對應<strong>探索階段</strong>的 skill</li>
+          <li><a href="https://mcpmarket.com/tools/skills/openspec-proposal-creator">OpenSpec Proposal Creator Skill</a> —把 proposal 產出流程獨立成 skill</li>
+          <li><a href="https://mcpmarket.com/es/tools/skills/openspec-brainstorming">OpenSpec Brainstorming Skill</a> — 整合 OpenSpec framework 的 brainstorming，已多個獨立 skill 發佈</li>
+          <li><a href="https://www.heyuan110.com/posts/ai/2026-04-09-claude-code-openspec-superpowers/">heyuan110 警告</a>：<em>「Skipping brainstorming means AI guesses your tech choices, you discover mismatch during code review — change cost is high」</em></li>
+        </ul>
+
+        <h4>修復：自訂 slash command <code>/opsx-propose-brainstorm</code></h4>
+        <p>把 brainstorm 前置流程寫死進指令。檔案 <code>.claude/commands/opsx-propose-brainstorm.md</code>：</p>
+        <pre><code><span class="keyword">---</span>
+description: Brainstorm-first propose flow with Superpowers handoff
+<span class="keyword">---</span>
+
+Execute a brainstorm-first proposal flow.
+
+<span class="comment">## Step 1: Activate brainstorming skill</span>
+Activate test-driven-development is NOT the right skill here.
+Activate `brainstorming` skill from Superpowers.
+
+<span class="comment">## Step 2: Multi-round Q&amp;A (max 5 rounds)</span>
+For each round:
+- Ask 3+ specific clarifying questions
+- Prioritize who / what / when over how
+- Wait for user answers before next round
+- Mark technical design decisions as "defer to design phase"
+- Stop when: (a) 5 rounds done, or (b) user says "enough"
+
+<span class="comment">## Step 3: Summarize into 4-6 acceptance criteria</span>
+Format each AC in BDD:
+  Given &lt;context&gt;
+  When &lt;action&gt;
+  Then &lt;expected outcome&gt;
+
+<span class="comment">## Step 4: Show summary, wait for approval</span>
+Display: feature name, 4-6 BDD ACs, out-of-scope list.
+Ask: "Approve and run /opsx:propose?"
+Wait for user confirmation.
+
+<span class="comment">## Step 5: Run /opsx:propose with context</span>
+Run /opsx:propose with the approved ACs as context.
+
+<span class="comment">## Halt</span>
+- User: "stop" → halt (do not run /opsx:propose)
+- AC &lt; 4 or &gt; 6 → ask user to refine
+- User keeps saying "I don't know" → suggest /opsx:explore instead</code></pre>
+
+        <div class="callout tip"><span class="label">什麼時候用 command 而非手動 prompt</span>Q3 的 command 適合<strong>每週 &gt; 2 次</strong>的新 feature 啟動。低頻用 prompt 模板就夠；高頻用 command 省時間。</div>
+      </div>
+    </details>
+
+    <!-- Q4 -->
+    <details class="faq">
+      <summary>Q4. 驗收階段：怎麼讓 <code>/opsx:verify</code> 跟 <code>verification-before-completion</code> 合作？</summary>
+      <div class="answer">
+        <p><code>/opsx:verify</code> 只檢查結構層（實作對齊 spec），不跑行為層驗證。Superpowers 的 <code>verification-before-completion</code> 補的就是行為層，但不會被自動呼叫。</p>
+
+        <h4>手動 prompt</h4>
+        <pre><code>準備跑 /opsx:verify。在跑之前，先啟動 verification-before-completion skill，
+針對本 change 的 proposal.md 驗收條件，逐條做行為層驗證：
+
+1. 對每條驗收條件：
+   - 列出涵蓋它的 test（unit / integration / e2e）
+   - 列出人工要手測的操作（若有 UI / 外部整合）
+   - 若無對應 test → flag 為 gap
+2. 執行全部自動測試，貼結果（pass/fail/skip 都列）
+3. 產出 gap 清單：
+   - 驗收條件 X 沒有 test 涵蓋
+   - 驗收條件 Y 只有 happy path，缺 edge case
+4. 我確認 gap 可接受後，才跑 /opsx:verify
+
+不准跳過行為驗證直接跑 /opsx:verify。</code></pre>
+
+        <div class="callout tip"><span class="label">成功訊號</span>有明確「驗收條件 ↔ test」對照表；有 gap 清單（空也要列 "no gaps"）；<code>/opsx:verify</code> 在行為驗證之後才跑。</div>
+      </div>
+    </details>
+
+    <!-- Q5 -->
+    <details class="faq">
+      <summary>Q5. 審查階段：怎麼讓 <code>subagent-driven-development</code> 在 <code>/opsx:archive</code> 前跑？</summary>
+      <div class="answer">
+        <p><code>/opsx:archive</code> 會把 change 封存到 <code>changes/archive/</code>。若 archive 前沒做 subagent review，bug 會被封存固化到永久 spec。</p>
+
+        <h4>手動 prompt</h4>
+        <pre><code>準備 archive 本 change 之前，先做 subagent review：
+
+1. 啟動 subagent-driven-development skill
+2. 派獨立 subagent 讀 `git diff main...HEAD`，找：
+   - 潛在 bug（null check、race condition、邊界條件、error handling）
+   - 違反 conventions（命名、structure、import 順序）
+   - 未覆蓋的 test 情境（edge case、error path）
+   - 不合理的 API 設計
+   - 安全問題（SQL injection、XSS、secret 洩漏）
+3. 產分級報告：
+   - BLOCKER（必修，阻擋 archive）
+   - WARNING（建議修，我決定）
+   - NIT（可略過）
+4. BLOCKER 全修完才可 archive
+
+subagent 必須是獨立 context，不能主 session 假裝 review。</code></pre>
+
+        <div class="callout warn"><span class="label">失敗訊號</span>主 session 自己 review（沒 subagent spawn）、直接 archive 沒 review、報告沒分級只說「looks good」、有 BLOCKER 未修就 archive。</div>
+
+        <h4>社群證據 + 現成方案</h4>
+        <ul class="bullets">
+          <li><a href="https://mcpmarket.com/tools/skills/openspec-architecture-review">OpenSpec Review Skill（mcpmarket）</a>— 社群已有<strong>專門的 review skill</strong>，原文描述：<em>「utilizes a specialized devil's advocate sub-agent to surface blind spots, provides a calibrated verdict on whether a feature is ready」</em> — 正是 Q5 要的模式</li>
+        </ul>
+
+        <h4>修復 B｜自訂 slash command <code>/opsx-archive-safe</code>（Q5 + Q6 合一）</h4>
+        <p>把 review + branch check + archive 合成一個 command。檔案 <code>.claude/commands/opsx-archive-safe.md</code>：</p>
+        <pre><code><span class="keyword">---</span>
+description: Safe archive with mandatory subagent review and branch checks
+<span class="keyword">---</span>
+
+Execute a safe archive workflow combining Q5 (subagent review) and Q6 (branch order).
+
+<span class="comment">## Step 1: Branch check</span>
+Run: git branch --show-current
+- If NOT on main → STOP and warn:
+  "Archive must run on main branch. Current: {branch}.
+   Required sequence: merge PR to main → git checkout main → git pull → archive."
+  Ask user to confirm before proceeding.
+
+<span class="comment">## Step 2: Pull latest</span>
+Run: git pull origin main
+- If conflict → STOP and ask user.
+
+<span class="comment">## Step 3: Spawn subagent review</span>
+Activate subagent-driven-development skill.
+Spawn an independent subagent to review:
+  git diff HEAD~N..HEAD
+Where N = number of commits in this change.
+
+Subagent MUST return a report with:
+- BLOCKER: must-fix issues (null checks, race conditions, security)
+- WARNING: recommended fixes (API design, naming)
+- NIT: minor style issues
+
+<span class="comment">## Step 4: Gate on BLOCKER</span>
+- Any BLOCKER → STOP. Show user the list. Do not proceed.
+- WARNING → show to user, ask whether to proceed.
+- NIT → list briefly, proceed.
+
+<span class="comment">## Step 5: Run /opsx:archive</span>
+Only after Step 4 passes. Run /opsx:archive.
+
+<span class="comment">## Step 6: Push</span>
+git push origin main
+
+<span class="comment">## Halt conditions</span>
+- Not on main → halt
+- Subagent review fails to spawn → halt, report
+- BLOCKER exists → halt
+- Any git command fails → halt, ask user</code></pre>
+
+        <h4>修復 C｜Hook：archive 時自動檢查（擴充統一 hook）</h4>
+        <p>把 <code>~/.claude/hooks/tdd-enforcement.sh</code> 擴充成<strong>統一 safety hook</strong>：</p>
+        <pre><code>#!/bin/bash
+PROMPT=$(cat)
+
+<span class="comment"># /opsx:apply → TDD 提醒（Q2）</span>
+if echo "$PROMPT" | grep -qE "/opsx:apply|/opsx-apply"; then
+  cat &lt;&lt;'EOF'
+[TDD REMINDER] /opsx:apply detected. Per-task RED→GREEN→commit. No batching.
+EOF
+fi
+
+<span class="comment"># /opsx:archive → review + branch check 提醒（Q5 + Q6）</span>
+if echo "$PROMPT" | grep -qE "/opsx:archive|/opsx-archive"; then
+  BRANCH=$(git branch --show-current 2&gt;/dev/null)
+  IS_MAIN="✅"
+  [[ "$BRANCH" != "main" &amp;&amp; "$BRANCH" != "master" ]] &amp;&amp; IS_MAIN="⚠️ WARN: NOT on main"
+
+  cat &lt;&lt;EOF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ARCHIVE SAFETY CHECK — Q5 + Q6]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Current branch: $BRANCH  ($IS_MAIN)
+
+Before archive, you MUST confirm:
+1. subagent-driven-development review DONE?
+   (All BLOCKER issues resolved?)
+2. PR merged to main?
+3. Local main pulled latest from remote?
+
+If any ❌ → HALT and fix first.
+If branch != main → DO NOT archive here.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EOF
+fi
+
+exit 0</code></pre>
+
+        <div class="callout bad"><span class="label">為什麼 Q5 要最重裝備</span>Archive 是<strong>不可逆</strong>的 —— 一旦 bug 封存進 <code class="inline">changes/archive/</code>，永久 specs/ 會被污染；下次 AI 讀 specs 做決策會基於爛 spec，bug 會倍增。這條路徑沒有「undo」。投資 command + hook 兩重保險值得。</div>
+      </div>
+    </details>
+
+    <!-- Q6 -->
+    <details class="faq">
+      <summary>Q6. 回寫階段：怎麼讓 <code>finishing-a-development-branch</code> 跟 <code>/opsx:archive</code> 正確接棒？</summary>
+      <div class="answer">
+        <p>順序錯會出事：先 archive 後 merge → PR 污染；先 merge 後在 feature branch archive → 跟 main 衝突。</p>
+
+        <h4>手動 prompt</h4>
+        <pre><code>本 change 要收尾，請嚴格按順序（每步完成停下來確認）：
+
+1. 啟動 finishing-a-development-branch skill
+2. 依 skill 流程：
+   a. 確認 branch 所有 test 綠
+   b. 確認 CI 綠
+   c. push 到 remote
+   d. 開 PR（含 change summary + 驗收條件核取列表）
+3. 等 reviewer approve
+4. merge PR 到 main
+5. 本地 checkout main、git pull origin main
+6. **在 main branch 上**跑 /opsx:archive
+7. git push origin main
+
+❌ 禁止：
+- 在 feature branch archive（archive 改動會污染 PR）
+- archive 先於 merge
+- main 沒 pull latest 就 archive</code></pre>
+
+        <h4>社群證據（最強）</h4>
+        <ul class="bullets">
+          <li><a href="https://intent-driven.dev/blog/2026/04/01/openspec-git-worktrees-opencode/">intent-driven.dev（2026-04-01）</a>— 明文規則：<em>「merge → archive, in that order, every time」</em>。引用原話：<em>「If you archive while still on a worktree branch, the spec merge runs against an incomplete view of main — other merged features aren't visible yet — and conflicts become likely.」</em></li>
+          <li><a href="https://github.com/Fission-AI/OpenSpec/blob/main/openspec-parallel-merge-plan.md">OpenSpec 官方 openspec-parallel-merge-plan.md</a>— 官方文檔承認 parallel merge 會有 archive 衝突，要跑 sync 才行</li>
+          <li><a href="https://github.com/tomkyle/branched-openspec">tomkyle/branched-openspec</a>— 第三方 fork，把 branch + Conventional Commits 強制整合進 OpenSpec（表示原版有痛點才有人 fork）</li>
+          <li><strong>具體衝突 case</strong>：當<strong>同日 archive 多個 change</strong>時，archive 目錄命名含 <code>dd-mm-yyyy</code>，會 collision</li>
+        </ul>
+
+        <h4>修復：Hook 檢查（見 Q5 的統一 hook）</h4>
+        <p>Q5 的 <code>~/.claude/hooks/tdd-enforcement.sh</code> 已經涵蓋 Q6 的 branch check —— 當 prompt 含 <code>/opsx:archive</code> 時，hook 自動顯示 current branch，並在非 main branch 時警告。這是一個 hook 解決兩題。</p>
+
+        <h4>補強修復：Git pre-commit / pre-push hook（系統層把關）</h4>
+        <p>若要更硬的規則，加 Git hook 在 <strong>commit 層</strong>攔截：</p>
+        <pre><code><span class="comment"># .git/hooks/pre-commit</span>
+#!/bin/bash
+<span class="comment"># 偵測 changes/archive/ 路徑的改動</span>
+if git diff --cached --name-only | grep -q "^changes/archive/"; then
+  CURRENT_BRANCH=$(git branch --show-current)
+  if [[ "$CURRENT_BRANCH" != "main" &amp;&amp; "$CURRENT_BRANCH" != "master" ]]; then
+    echo "❌ ERROR: Archive files staged on non-main branch ($CURRENT_BRANCH)"
+    echo "   Archive must only run on main branch after PR merge."
+    echo "   Run: git reset HEAD changes/archive/"
+    exit 1
+  fi
+fi
+exit 0</code></pre>
+        <p class="mute">這是<strong>系統層</strong>保護，比 Claude Code hook 更底層 —— 連「手動執行 <code>git commit</code>」都會被擋。</p>
+
+        <div class="callout warn"><span class="label">最強配置</span>Claude Code hook（提醒 AI）+ Git hook（擋實體 commit）+ <code>/opsx-archive-safe</code> command（引導流程）三層。任一環失守還有另外兩環守著。</div>
+      </div>
+    </details>
+
+    <!-- Q7 -->
+    <details class="faq">
+      <summary>Q7. 小改動 / Bug fix：怎麼判斷要不要走完整流程？</summary>
+      <div class="answer">
+        <h4>手動 prompt（跑任何 change 之前先問）</h4>
+        <pre><code>評估這個 change 的流程路徑：
+
+&lt;貼 change 描述&gt;
+
+按這張決策表回答：
+
+| 條件 | 建議流程 |
+|---|---|
+| 改 public API / 行為改變 | 完整流程（propose → apply → verify → archive） |
+| 改規格文件（不改 code） | propose → archive（skip apply） |
+| 純內部 refactor（行為不變） | apply + TDD refactor 模式 → 不 propose、不 archive |
+| Bug fix 不改規格 | 直接修 + regression test + PR → 不 propose |
+| Bug fix 改規格 | 輕量 propose → apply → archive |
+| Hotfix 緊急 | 修 + PR → 24 小時內補 propose + archive |
+| Spike / 可行性 | explore → 不產 artifact → 口頭回報 |
+
+最後告訴我：建議流程 + 理由（為什麼不選更輕/更重的）。
+不要自己決定直接跑，等我確認。</code></pre>
+      </div>
+    </details>
+
+    <!-- Q8 -->
+    <details class="faq">
+      <summary>Q8. 跨 session / 隔天繼續：怎麼讓新 session 接上狀態？</summary>
+      <div class="answer">
+        <h4>手動 prompt（新 session 開場貼）</h4>
+        <pre><code>繼續昨天 / 上次的 change 工作：
+
+1. 讀 `changes/&lt;active-change&gt;/tasks.md`，告訴我：
+   - 已打勾的 task（done）
+   - 未打勾但已有對應 code 的 task（做一半）
+   - 完全沒開始的 task
+2. 讀最近 10 個 commit，判斷上次做到哪個階段
+3. 啟動對應 skill：
+   - 下個 task 是實作 → test-driven-development
+   - 下個 task 是驗證 → verification-before-completion
+4. 彙整狀態給我，等我說「繼續」才往下做
+
+不要自己假設從哪開始，先把狀態對齊。</code></pre>
+
+        <h4>社群證據 + 現成方案</h4>
+        <ul class="bullets">
+          <li><a href="https://mcpmarket.com/tools/skills/openspec-workflow-continuity-1">OpenSpec Workflow Continuity Skill（mcpmarket）</a>— 社群已有<strong>專門的 continuity skill</strong>。原文描述：<em>「automates the progression of development changes by generating the next required artifact in an OpenSpec-defined workflow, intelligently determines the current state of a change」</em> — 正是 Q8 要的</li>
+          <li><a href="https://code.claude.com/docs/en/common-workflows">Claude Code 原生 <code>--continue</code> / <code>--resume</code></a>— 官方支援 session 重開後恢復完整 message history（CLAUDE.md 自動重載）</li>
+          <li><a href="https://github.com/anthropics/claude-code/issues/44063">Issue #44063 — Resume Any Claude Session in the CLI</a>— 社群提出的功能請求（顯示這是<strong>共同痛點</strong>）</li>
+          <li><a href="https://medium.com/@porter.nicholas/teaching-claude-to-remember-part-3-sessions-and-resumable-workflow-1c356d9e442f">Nick Porter — Teaching Claude To Remember: Sessions & Resumable Workflow</a>— 實務整合指南</li>
+        </ul>
+
+        <h4>修復：自訂 slash command <code>/opsx-resume</code></h4>
+        <p>把狀態偵測流程寫死進指令。檔案 <code>.claude/commands/opsx-resume.md</code>：</p>
+        <pre><code><span class="keyword">---</span>
+description: Resume OpenSpec work from a previous session with state detection
+<span class="keyword">---</span>
+
+Detect current change state and resume safely.
+
+<span class="comment">## Step 1: Find active change</span>
+Look for the most recent directory under `changes/` that is NOT in `changes/archive/`.
+Read its `tasks.md`.
+
+<span class="comment">## Step 2: Categorize tasks</span>
+From tasks.md, split into three lists:
+- DONE: tasks marked [x]
+- IN-PROGRESS: tasks marked [ ] but have related commits/files modified
+- NOT-STARTED: tasks marked [ ] with no activity
+
+To detect IN-PROGRESS, cross-reference:
+- Recent git log (last 10 commits)
+- git status (modified / staged files)
+- tasks.md task descriptions (match keywords)
+
+<span class="comment">## Step 3: Infer last-active phase</span>
+Based on last commit message and files modified, guess:
+- "Last commit looks like TDD RED" → next: write code (GREEN)
+- "Last commit looks like TDD GREEN" → next: refactor or next task
+- "Uncommitted modifications in test file" → you were in middle of writing test
+- "Uncommitted modifications in prod file" → you were in middle of writing code
+
+<span class="comment">## Step 4: Report state to user</span>
+Display:
+  ━━━ Active change: {name} ━━━
+  ━━━ Progress: {N_done} / {N_total} tasks ━━━
+
+  DONE ({N_done}):
+  - [x] Task 1 ...
+
+  IN-PROGRESS ({N_in_progress}):
+  - [~] Task M ... (last commit: X, modified files: Y)
+
+  NOT-STARTED ({N_not_started}):
+  - [ ] Task K ...
+
+  Guess for next action: {TDD phase} for Task {next}
+
+<span class="comment">## Step 5: Activate correct skill</span>
+Based on Step 4's guess, activate the matching skill:
+- next is implementation → test-driven-development
+- next is verification → verification-before-completion
+- next is archive → subagent-driven-development (review first!)
+
+<span class="comment">## Step 6: Wait for user confirmation</span>
+Ask: "Correct assessment? Confirm next action?"
+Wait for user input before continuing any work.
+
+<span class="comment">## Halt</span>
+- No active change found → ask user to run /opsx:propose first
+- tasks.md missing → halt, explain
+- Conflicting state (multiple active changes) → halt, ask user which</code></pre>
+
+        <div class="callout tip"><span class="label">或直接用 <code class="inline">claude --continue</code></span>若不想建 command，<strong>Claude Code 原生的 <code class="inline">claude --continue</code></strong>（接最近 session）或 <code class="inline">claude --resume</code>（選 session）已經重載完整 message history + CLAUDE.md。適合沒有 tasks.md 狀態歧義的情境。</div>
+      </div>
+    </details>
+
+  </div>
+
 </section>
 
 <!-- ============ 5. Greenfield ============ -->
@@ -1637,8 +2345,467 @@ Source material:
   <h2><span class="num">05</span>Greenfield 開發情境</h2>
   <p class="lead">
     Greenfield（全新專案）跟 Brownfield 的關鍵差異：<strong>沒有既有 codebase 可以 map</strong>、<strong>必須從零訂規則</strong>、<strong>初期允許更激進的 refactor</strong>。
-    以下 5 種情境涵蓋從 Day 0 到 MVP 達成的完整生命週期。
+    以下先給<strong>最佳方案（5.0）</strong>，再展開 5 種情境（G1–G5）涵蓋從 Day 0 到 MVP 達成的完整生命週期。
   </p>
+
+  <!-- ============ 5.0 Best Solution for Greenfield ============ -->
+  <div id="greenfield-best" class="wide-block" style="margin-top: 36px; padding: 28px 30px; background: linear-gradient(135deg, rgba(8,145,178,0.06), rgba(94,92,230,0.04)); border-radius: var(--radius-md); border-left: 4px solid var(--c-speckit);">
+    <h3 style="margin-top: 0; font-size: 1.7rem;">5.0 Greenfield 最佳方案</h3>
+    <p class="lead" style="margin-bottom: 12px;">
+      基於 4 個獨立社群來源的調研結論：<strong>Greenfield 不用主流程（OpenSpec + SP），改用 <span class="hl-speckit">SpecKit</span> + <span class="hl-super">Superpowers</span></strong>。
+    </p>
+
+    <h4>直接結論</h4>
+    <div class="callout tip"><span class="label">推薦組合</span>
+      <strong>SpecKit + Superpowers</strong>（SpecKit 做規格治理，Superpowers 做執行紀律）。<br>
+      備選：<strong>Only Superpowers</strong>（Solo / PoC）、<strong>Kiro</strong>（AWS-native）、<strong>BMAD-METHOD</strong>（大型 enterprise &gt; 20 人）。
+    </div>
+
+    <h4>七階段 × 工具指令對應表</h4>
+    <p class="mute">每個階段主導工具、具體指令、補位 skill 一次看懂。粗體 = 該階段主導者。</p>
+    <div class="table-wrap">
+      <table style="table-layout: fixed; width: 100%;">
+        <colgroup>
+          <col style="width: 7%;">
+          <col style="width: 18%;">
+          <col style="width: 18%;">
+          <col style="width: 57%;">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>階段</th>
+            <th><span class="hl-speckit">SpecKit</span> 指令</th>
+            <th><span class="hl-super">Superpowers</span> skill</th>
+            <th>補充說明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background: rgba(8,145,178,0.04);">
+            <td colspan="4"><strong>前置（專案一生只做一次）</strong></td>
+          </tr>
+          <tr>
+            <td><span class="mute">Day 0</span></td>
+            <td><strong><code>/speckit.constitution</code></strong></td>
+            <td><code>brainstorming</code></td>
+            <td>
+              <strong>主</strong>：<code class="inline">/speckit.constitution</code> 定治理原則，產 <code>.specify/memory/constitution.md</code><br>
+              <strong>輔</strong>：<code class="inline">brainstorming</code> skill 對 constitution 條款做 Devil's Advocate 挖盲點
+            </td>
+          </tr>
+          <tr style="background: rgba(0,122,255,0.04);">
+            <td colspan="4"><strong>7 階段循環（每個 feature 跑一次）</strong></td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-read">讀懂</span></td>
+            <td><strong><code>/speckit.specify</code></strong></td>
+            <td><code>brainstorming</code></td>
+            <td>
+              <strong>主</strong>：<code class="inline">/speckit.specify</code> 產 <code>spec.md</code>（user story + 驗收條件）<br>
+              <strong>輔</strong>：<code class="inline">brainstorming</code> skill 挖需求盲點（模式 A：specify 後精煉）
+            </td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-analyze">分析</span></td>
+            <td><strong><code>/speckit.clarify</code></strong></td>
+            <td><code>brainstorming</code></td>
+            <td>
+              <strong>主</strong>：<code class="inline">/speckit.clarify</code> 跑互動 Q&amp;A 消除 <code>spec.md</code> 歧義<br>
+              <strong>輔</strong>：<code class="inline">brainstorming</code> skill 多輪澄清 + 技術方案分歧標記「待設計」<br>
+              <span class="mute">⚠️ clarify 是<strong>顯式 Gate</strong>，跳過要明說</span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-design">設計</span></td>
+            <td><strong><code>/speckit.plan</code></strong></td>
+            <td><code>writing-plans</code>（可選）</td>
+            <td>
+              <strong>主</strong>：<code class="inline">/speckit.plan</code> 一口氣產 <code>plan.md</code> + <code>contracts/</code> + <code>data-model.md</code> + <code>research.md</code> + <code>quickstart.md</code><br>
+              <strong>輔（可選）</strong>：<code class="inline">writing-plans</code> skill 對 plan 做架構 review，列 architectural risks
+            </td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-build">實作</span></td>
+            <td><code>/speckit.tasks</code><br><code>/speckit.implement</code></td>
+            <td><strong><code>test-driven-development</code></strong></td>
+            <td>
+              <strong>主</strong>：<code class="inline">test-driven-development</code> skill（Superpowers）<br>
+              　每 task 強制 RED→GREEN→REFACTOR→commit<br>
+              <strong>輔</strong>：<code class="inline">/speckit.tasks</code>（產 task 清單）+ <code class="inline">/speckit.implement</code>（task orchestration / 追進度）<br>
+              <span class="mute">⚠️ SpecKit 不強制 TDD，必須 SP 接管，否則 test 會被跳</span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-test">測試</span></td>
+            <td><span class="mute">—</span></td>
+            <td><strong><code>test-driven-development</code></strong><br><strong><code>verification-before-completion</code></strong></td>
+            <td>
+              <strong>主</strong>：<code class="inline">test-driven-development</code>（實作階段每 task 寫 test）<br>
+              <strong>主</strong>：<code class="inline">verification-before-completion</code>（交付前逐驗收條件驗證）<br>
+              <strong>輔</strong>：<span class="mute">無（SpecKit 完全不覆蓋此階段）</span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-review">審查</span></td>
+            <td><code>/speckit.analyze</code></td>
+            <td><strong><code>subagent-driven-development</code></strong><br><code>requesting-code-review</code></td>
+            <td>
+              <strong>主</strong>：<code class="inline">subagent-driven-development</code> skill，派獨立 subagent 讀 <code>git diff</code> 找 BLOCKER / WARNING / NIT<br>
+              <strong>輔 1</strong>：<code class="inline">/speckit.analyze</code> 檢查 spec ↔ plan ↔ tasks ↔ code 的 cross-artifact 一致性（結構層）<br>
+              <strong>輔 2</strong>：<code class="inline">requesting-code-review</code> skill 做 pre-review checklist<br>
+              <span class="mute">💡 雙層保護：SpecKit 管結構、SP 管行為</span>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-write">回寫</span></td>
+            <td><span class="mute">—</span></td>
+            <td><strong><code>finishing-a-development-branch</code></strong></td>
+            <td>
+              <strong>主</strong>：<code class="inline">finishing-a-development-branch</code> skill，引導 test 綠 → CI 綠 → push → PR → approve → merge<br>
+              <strong>輔</strong>：<span class="mute">無（SpecKit <strong>沒有 archive 概念</strong>）</span><br>
+              <span class="mute">💡 spec 永住 <code class="inline">.specify/specs/{FEATURE_ID}/</code>，不搬不封存</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn"><span class="label">3 個階段 SpecKit 管不到</span>
+      <strong>測試</strong>、<strong>回寫</strong>、<strong>實作（TDD 部分）</strong>這 3 個階段 SpecKit 完全不涵蓋或不強制。若只用 SpecKit 這 3 格會空著 → 這正是必須搭 Superpowers 的結構性原因，不是錦上添花。
+    </div>
+
+    <h4>為什麼不是 OpenSpec + SP（Brownfield 主流程）？</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>原因</th><th>說明</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>OpenSpec 自己定位是 brownfield-first</strong></td>
+            <td>官方文件明文：「OpenSpec specifically addresses brownfield iteration with delta markers」。在 Greenfield 沒既有 code 要 diff，delta markers 派不上用場。</td>
+          </tr>
+          <tr>
+            <td><strong>SpecKit 的 constitution 是 Day 0 殺手鐧</strong></td>
+            <td>專案原則、coding standard、合規要求一次定稿，全生命週期 AI 都對齊。OpenSpec 完全沒對應概念。Greenfield 就是要<strong>Day 0 把治理層做紮實</strong>。</td>
+          </tr>
+          <tr>
+            <td><strong>SpecKit 的 <code>contracts/</code> / <code>data-model.md</code> 原生產物</strong></td>
+            <td>Greenfield 從零訂合約層時，SpecKit 直接產 API schema / 資料模型。OpenSpec 的 <code>design.md</code> 要自己補。</td>
+          </tr>
+          <tr>
+            <td><strong>SpecKit 跨 30+ AI 工具支援</strong></td>
+            <td>Greenfield 團隊常同時用 Cursor + Claude Code + Copilot + Gemini。SpecKit 的 <code>.specify/</code> 是跨工具共用規格的最佳答案。</td>
+          </tr>
+          <tr>
+            <td><strong>OpenSpec 的 <code>onboard</code> / delta 流程對 Greenfield 是浪費</strong></td>
+            <td>這些特性是為既有 code 反推規格設計的。新專案用不到，反而多一層 ceremony。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>能力矩陣（相對於 Playbook 的 7 階段）</h4>
+    <div class="table-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>階段</th>
+            <th>Only SpecKit</th>
+            <th>Only Superpowers</th>
+            <th><span class="hl-speckit">SpecKit + SP</span><br><span class="mute" style="font-weight: 400; font-size: 0.8rem;">Greenfield 最佳</span></th>
+            <th>OpenSpec + SP<br><span class="mute" style="font-weight: 400; font-size: 0.8rem;">Brownfield 主流程</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="phase-tag phase-read">讀懂</span></td>
+            <td><strong class="score-5">5</strong></td>
+            <td><strong class="score-2">2</strong></td>
+            <td><strong class="score-5">5</strong></td>
+            <td><strong class="score-4">4</strong></td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-analyze">分析</span></td>
+            <td><strong class="score-5">5</strong></td>
+            <td><strong class="score-4">4</strong></td>
+            <td><strong class="score-5">5</strong></td>
+            <td><strong class="score-5">5</strong></td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-design">設計</span></td>
+            <td><strong class="score-5">5</strong></td>
+            <td><strong class="score-2">2</strong></td>
+            <td><strong class="score-5">5</strong></td>
+            <td><strong class="score-4">4</strong></td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-build">實作</span></td>
+            <td><strong class="score-3">3</strong></td>
+            <td><strong class="score-4">4</strong></td>
+            <td><strong class="score-5">5</strong><br><span class="matrix-note">SP TDD 接管 /speckit.implement</span></td>
+            <td><strong class="score-5">5</strong></td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-test">測試</span></td>
+            <td><strong class="score-1">1</strong></td>
+            <td><strong class="score-5">5</strong></td>
+            <td><strong class="score-5">5</strong><br><span class="matrix-note">SP 補齊 SpecKit 痛點</span></td>
+            <td><strong class="score-5">5</strong></td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-review">審查</span></td>
+            <td><strong class="score-2">2</strong></td>
+            <td><strong class="score-5">5</strong></td>
+            <td><strong class="score-5">5</strong><br><span class="matrix-note">SP subagent review + /speckit.analyze</span></td>
+            <td><strong class="score-5">5</strong></td>
+          </tr>
+          <tr>
+            <td><span class="phase-tag phase-write">回寫</span></td>
+            <td><strong class="score-1">1</strong></td>
+            <td><strong class="score-2">2</strong></td>
+            <td><strong class="score-2">2</strong><br><span class="matrix-note">SpecKit 無 archive（Greenfield 不需要）</span></td>
+            <td><strong class="score-5">5</strong></td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>總分</strong></td>
+            <td><strong class="score-4">22 / 35</strong></td>
+            <td><strong class="score-4">24 / 35</strong></td>
+            <td><strong class="score-5">32 / 35</strong></td>
+            <td><strong class="score-5">33 / 35</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout info"><span class="label">1 分差距的意義</span>SpecKit+SP 總分 32 vs OpenSpec+SP 的 33，差 1 分在「回寫 / archive」。但<strong>Greenfield 沒有既有 spec 要對齊</strong>，archive 實際價值趨近於零。Greenfield 情境下這 1 分不是真弱項。</div>
+
+    <h4>例外情境決策表（什麼時候不用 SpecKit+SP）</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>你的處境</th><th>改推薦</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Solo / 2 人 MVP 期</strong></td>
+            <td>Only Superpowers</td>
+            <td>SpecKit 的 ceremony（constitution / specify / plan / tasks 四層）對小團隊太重</td>
+          </tr>
+          <tr>
+            <td><strong>一週內做 PoC / 實驗</strong></td>
+            <td>Only Superpowers</td>
+            <td>零 setup 成本、執行紀律最強。PoC 不需要永久 spec</td>
+          </tr>
+          <tr>
+            <td><strong>AWS-native + 重 infra</strong></td>
+            <td><a href="https://kiro.dev/">Kiro</a></td>
+            <td>AWS 整合最強，infra-as-code 路徑最短。但綁 AWS 生態</td>
+          </tr>
+          <tr>
+            <td><strong>大型 enterprise（&gt; 20 人）</strong></td>
+            <td>BMAD-METHOD</td>
+            <td>PRD + architecture document 雙軌，適合需要重量治理的組織</td>
+          </tr>
+          <tr>
+            <td><strong>強監管（金融 / 醫療 / 政府）</strong></td>
+            <td><strong>SpecKit + SP</strong>（推薦主選）</td>
+            <td>constitution 層是合規利器，`contracts/` 原生產物方便稽核</td>
+          </tr>
+          <tr>
+            <td><strong>跨多種 AI 工具協作</strong></td>
+            <td><strong>SpecKit + SP</strong>（推薦主選）</td>
+            <td>SpecKit 官方支援 30+ AI agent，跨工具共用 `.specify/` 是其核心場景</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>Day 0 完整指令序列（每步插 Superpowers handoff）</h4>
+    <pre><code><span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># Step 0：安裝（專案一生只做一次）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+specify init my-project
+cd my-project
+
+<span class="comment"># 手動加 Superpowers 到 CLAUDE.md（橋接兩套工具）</span>
+<span class="comment"># 見下方「CLAUDE.md Rule 2 for SpecKit」</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># Step 1：建 constitution（團隊協商，定稿後不常動）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.constitution
+  <span class="comment"># → .specify/memory/constitution.md</span>
+
+<span class="comment"># 【Superpowers handoff】</span>
+<span class="comment"># 啟動 brainstorming skill 對 constitution 做 Devil's Advocate：</span>
+<span class="comment"># 「列 3-5 個『constitution 可能遺漏的原則』+ 2-3 個『可能過度限制的條款』」</span>
+<span class="comment"># 挖出盲點後再定稿。</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># Step 2-3：第一個 feature 規格 + 澄清</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.specify "&lt;feature 描述&gt;"
+  <span class="comment"># → .specify/specs/{FEATURE_ID}/spec.md</span>
+
+<span class="comment"># 【Superpowers handoff】</span>
+<span class="comment"># 啟動 brainstorming skill 挖需求盲點（模式 A：propose 後精煉）</span>
+
+/speckit.clarify
+  <span class="comment"># → 互動 Q&amp;A 消除歧義</span>
+  <span class="comment"># → 更新 spec.md</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># Step 4：技術方案 + 合約產物</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.plan
+  <span class="comment"># → plan.md（技術架構）</span>
+  <span class="comment"># → contracts/（API schema / OpenAPI）</span>
+  <span class="comment"># → data-model.md（ER / schema）</span>
+  <span class="comment"># → research.md（tech stack 調研）</span>
+  <span class="comment"># → quickstart.md（上手指南）</span>
+
+<span class="comment"># 【Superpowers handoff（可選）】</span>
+<span class="comment"># 啟動 writing-plans skill 對 plan.md 做 review：</span>
+<span class="comment"># 「檢查 plan 是否對齊 constitution，列出 architectural risks」</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># Step 5：任務拆解</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.tasks
+  <span class="comment"># → tasks.md（有依賴 / 並行標記）</span>
+
+<span class="comment"># 【人工 review】tasks.md 粒度對不對（參考 Brownfield FAQ Q1）</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># Step 6：實作（SP TDD 接管）← 最關鍵的 handoff</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.implement
+  <span class="comment"># SpecKit 開始逐 task 實作</span>
+
+<span class="comment"># 【Superpowers handoff — 每個 task 都要】</span>
+<span class="comment"># 啟動 test-driven-development skill：</span>
+<span class="comment">#   1. RED：先寫 failing test 給我看</span>
+<span class="comment">#   2. 等我確認「ok 繼續」</span>
+<span class="comment">#   3. GREEN：寫最小 code 讓 test 過</span>
+<span class="comment">#   4. REFACTOR</span>
+<span class="comment">#   5. commit（格式：&lt;type&gt;(&lt;scope&gt;): &lt;desc&gt;）</span>
+<span class="comment">#   6. 打勾 tasks.md → 下一個 task</span>
+<span class="comment"># ⚠️ SpecKit 原生不強制 TDD，必須靠 CLAUDE.md Rule 2 或 hook 強制</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># Step 7：跨產物一致性 + 審查</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/speckit.analyze
+  <span class="comment"># 檢查 spec ↔ plan ↔ tasks ↔ code 是否對齊</span>
+
+<span class="comment"># 【Superpowers handoff】</span>
+<span class="comment"># 啟動 subagent-driven-development skill：</span>
+<span class="comment"># 派獨立 subagent 讀 git diff 找 BLOCKER / WARNING / NIT</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># Step 8：PR merge（收尾）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="comment"># 【Superpowers handoff】</span>
+<span class="comment"># 啟動 finishing-a-development-branch skill：</span>
+<span class="comment">#   test 綠 → CI 綠 → push → PR → approve → merge</span>
+
+<span class="comment"># ⚠️ SpecKit 沒 archive 概念 —— spec 永遠住 .specify/specs/{FEATURE_ID}/</span>
+<span class="comment"># 需要改 spec？直接編輯或開新 feature 覆蓋。</span></code></pre>
+
+    <h4>CLAUDE.md Rule 2 for SpecKit（改寫版）</h4>
+    <p>Greenfield 專案的 CLAUDE.md 用這版替換 Section 12 的 Brownfield 版：</p>
+    <pre><code><span class="keyword">## Mandatory Chain Rules (Greenfield · SpecKit + Superpowers)</span>
+
+<span class="comment">### Rule 1: SpecKit Drives Specs (Constitution First)</span>
+- /speckit.constitution MUST run before ANY /speckit.specify.
+- Constitution is immutable after Day 0 sign-off; changes need team vote.
+- SpecKit's spec.md / plan.md / tasks.md are source of truth.
+- DISABLE Superpowers writing-plans as primary planner
+  (use only as review skill after /speckit.plan).
+
+<span class="comment">### Rule 2: /speckit.implement Triggers Per-Task TDD (Mandatory)</span>
+
+When /speckit.implement executes, treat EACH task in tasks.md as a SEPARATE TDD cycle.
+For every task, you MUST:
+
+1. Announce the task number + scope before starting.
+2. Activate test-driven-development skill.
+3. RED: Write a failing test first, RUN it, SHOW failing output.
+4. DO NOT write production code until RED is visually confirmed.
+5. GREEN: Write minimal code to pass. Run tests. Show green output.
+6. REFACTOR: Clean up while keeping tests green.
+7. Commit per task: `&lt;type&gt;(&lt;scope&gt;): &lt;task-description&gt;`
+8. Mark [x] in tasks.md.
+9. Move to next task — ONE cycle per task, NO batching.
+
+TDD-exempt (migration / config / pure rename):
+  Announce "[TDD-exempt: &lt;reason&gt;]". Never silently skip.
+
+<span class="comment">### Rule 3: Phase Handoffs to Superpowers</span>
+- /speckit.specify → activate brainstorming skill for edge case mining.
+- /speckit.plan → activate writing-plans skill for architectural review (OPTIONAL).
+- /speckit.analyze → activate subagent-driven-development for cross-artifact review.
+- PR merge → activate finishing-a-development-branch skill.
+
+<span class="comment">### Rule 4: Clarify Is a Soft Gate</span>
+- /speckit.clarify SHOULD run after /speckit.specify, before /speckit.plan.
+- User may explicitly skip with "skip clarify" — do not skip silently.
+
+<span class="comment">### Rule 5: No Archive (SpecKit-specific)</span>
+- Specs live permanently in .specify/specs/{FEATURE_ID}/.
+- Do NOT create changes/archive/ or similar (that's OpenSpec pattern).
+- To evolve a spec: edit in place OR open new feature with updated spec.
+
+<span class="comment">### Rule 6: Cross-AI Tool Consistency</span>
+- .specify/ is shared across Claude Code / Cursor / Copilot / Gemini.
+- Do NOT introduce tool-specific artifacts in .specify/.
+- Tool-specific config goes in each tool's own directory.</code></pre>
+
+    <h4>社群證據（4 個來源）</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>來源</th><th>支持 SpecKit 作為 Greenfield 首選的陳述</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><a href="https://microsoftlearning.github.io/mslearn-github-copilot-dev/Instructions/Labs/LAB_AK_13_get-started-spec-driven-development.html">Microsoft Learn — Develop a greenfield application using GitHub Spec Kit</a></td>
+            <td>微軟官方教材<strong>專門有一課</strong>教 greenfield 用 SpecKit。Day 0 流程：constitution → specify → plan → tasks → implement</td>
+          </tr>
+          <tr>
+            <td><a href="https://medium.com/@richardhightower/agentic-coding-gsd-vs-spec-kit-vs-openspec-vs-taskmaster-ai-where-sdd-tools-diverge-0414dcb97e46">Rick Hightower — Agentic Coding: SDD Tools Diverge</a></td>
+            <td><em>「GitHub Spec Kit — medium-to-large greenfield features where the upfront planning investment pays off through reduced rework」</em></td>
+          </tr>
+          <tr>
+            <td><a href="https://www.augmentcode.com/tools/best-spec-driven-development-tools">Augment Code — 6 Best Spec-Driven Development Tools for AI Coding in 2026</a></td>
+            <td><em>「Spec Kit <strong>targets greenfield projects</strong>, while OpenSpec specifically addresses brownfield iteration」</em></td>
+          </tr>
+          <tr>
+            <td><a href="https://docs.bswen.com/blog/2026-03-27-openspec-vs-superpowers/">BSWEN — OpenSpec vs Superpowers</a></td>
+            <td>OpenSpec 自稱 <em>「brownfield-first」</em> —— 為既有 code 優化，Greenfield 用它浪費特性</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/github/spec-kit/discussions/1536">SpecKit Discussion #1536</a></td>
+            <td>社群討論「SpecKit vs OpenSpec 在 greenfield / brownfield 的取捨」，建議實際試跑</td>
+          </tr>
+          <tr>
+            <td><a href="https://blog.scottlogic.com/2025/11/26/putting-spec-kit-through-its-paces-radical-idea-or-reinvented-waterfall.html">Scott Logic — Putting Spec Kit Through Its Paces</a></td>
+            <td>深度實測 SpecKit 的 greenfield 工作流，點出「linear flow 適合需求清楚的情境」</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn"><span class="label">最大限制（誠實揭露）</span>SpecKit + SP 跟主流程一樣有「兩套工具不自動串接」的問題，<code class="inline">/speckit.implement</code> 不會自動觸發 Superpowers TDD。修復方案跟 Brownfield Q2 一樣（CLAUDE.md Rule + custom command + hook），只是指令名稱改成 <code class="inline">/speckit.implement</code>。<a href="#brownfield-faq">見 Brownfield 常見問題 Q2</a>。</div>
+
+    <div class="callout tip"><span class="label">G5 轉 Brownfield 的含意</span>當專案成熟要轉 Brownfield 時（<a href="#g5">見 G5</a>），可以從 SpecKit+SP 切到 OpenSpec+SP：跑 <code>/opsx:onboard</code> 讓 OpenSpec 讀 <code>.specify/specs/</code> 產出對應的 OpenSpec specs/，之後新 feature 走 OpenSpec 流程。這是已驗證的 migration 路徑。</div>
+  </div>
+
+  <div style="margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border-light);">
+    <p class="mute">以下 5 種情境（G1–G5）展開具體操作步驟。若已確認用 SpecKit+SP，可直接跳到 G1。</p>
+  </div>
 
   <div class="callout tip">
     <span class="label">Greenfield vs Brownfield 差異快速對照</span>
@@ -3046,11 +4213,31 @@ specify init &lt;PROJECT_NAME&gt;
 - OpenSpec's `tasks.md` is the single source of truth for implementation plans.
 - DISABLE Superpowers `writing-plans` skill. Do not create parallel plans.
 
-<span class="comment">### Rule 2: /opsx:apply Triggers Superpowers Discipline</span>
-When /opsx:apply runs, mandatorily activate:
-- test-driven-development (RED → GREEN → REFACTOR)
+<span class="comment">### Rule 2: /opsx:apply Triggers Per-Task TDD (Mandatory)</span>
+
+When /opsx:apply executes, treat EACH task in tasks.md as a SEPARATE TDD cycle.
+For every task, you MUST:
+
+1. Announce the task number + scope before starting.
+2. Activate test-driven-development skill.
+3. RED: Write a failing test first, RUN it, SHOW failing output.
+4. DO NOT write production code until RED is visually confirmed.
+5. GREEN: Write minimal code to pass the test. Run tests. Show green output.
+6. REFACTOR: Clean up while keeping tests green.
+7. Commit per task: `&lt;type&gt;(&lt;scope&gt;): &lt;task-description&gt;`
+8. Mark [x] in tasks.md.
+9. Move to next task — ONE cycle per task, NO batching.
+
+TDD-exempt (migration / config / pure rename):
+  Announce "[TDD-exempt: &lt;reason&gt;]". Never silently skip.
+
+Violation handling:
+  If any MUST above cannot be met, STOP and ask the user.
+  Treat skipped RED as a critical violation.
+
+Also activate per phase:
 - verification-before-completion (before marking task done)
-- subagent-driven-development (for code review)
+- subagent-driven-development (for code review, before /opsx:archive)
 
 <span class="comment">### Rule 3: TDD Semantics by Scenario</span>
 - Feature / Bug fix: Write failing test FIRST, then code.
@@ -3071,6 +4258,150 @@ See `docs/ai-dev-workflow-playbook.html` for detailed scenarios:
 - 情境 4（Bug fix）
 - 情境 5（Hotfix）
 - 等等</code></pre>
+</section>
+
+<!-- ============ 13. External References ============ -->
+<section id="references">
+  <h2><span class="num">13</span>外部參考資料（社群證據）</h2>
+  <p class="lead">本 Playbook 的「OpenSpec + Superpowers 不會自動串接」以及 Q2「<code class="inline">/opsx:apply</code> 沒啟用 TDD」問題，在社群有大量證據。收錄為決策參考。</p>
+
+  <h3>官方整合進度</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>連結</th><th>狀態</th><th>重點</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/pull/970">PR #970 — sdd-plus-superpowers</a></td>
+          <td><strong style="color: var(--warn);">Open</strong>（未 merge）</td>
+          <td>OpenSpec 官方用 instruction-level skill injection 整合 Superpowers。apply 階段串 <code>subagent-driven-development</code> → transitively 啟動 <code>test-driven-development</code>。尚未正式釋出。</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/issues/780">Issue #780</a></td>
+          <td>Open</td>
+          <td>社群提議把 OpenSpec 打包成 Superpowers skill pack 分發</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/issues/366">Issue #366 — Claude Skills support</a></td>
+          <td>討論中</td>
+          <td>Claude Code skill 格式相容性討論</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>關鍵外部文章（Q2 — TDD）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>來源</th><th>核心論點</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="https://www.heyuan110.com/posts/ai/2026-04-09-claude-code-openspec-superpowers/">heyuan110.com — Claude Code + OpenSpec + Superpowers: When to Use All Three (and When Not To)</a></td>
+          <td>直接點名：<em>"OpenSpec and Superpowers are two independent systems — they do not automatically chain together."</em> 建議用 CLAUDE.md 顯式配置。</td>
+        </tr>
+        <tr>
+          <td><a href="https://alexop.dev/posts/custom-tdd-workflow-claude-code-vue/">alexop.dev — Forcing Claude Code to TDD: An Agentic Red-Green-Refactor Loop</a></td>
+          <td>三合一 TDD 強制機制（skills + subagents + hooks）。引用 Scott Spence 實測：skill 自動觸發從 <strong>~20% → ~84%</strong>（加 UserPromptSubmit hook 後）。</td>
+        </tr>
+        <tr>
+          <td><a href="https://docs.bswen.com/blog/2026-03-27-openspec-vs-superpowers/">BSWEN — OpenSpec vs Superpowers: Which SDD Framework Should You Choose?</a></td>
+          <td>兩個框架的能力對比，明列「OpenSpec 沒有 TDD 強制」。</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/karanb192/awesome-claude-skills">awesome-claude-skills</a></td>
+          <td>50+ 驗證過的 Claude Code skill 清單，含 TDD / debugging / git workflow。</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/obra/superpowers">obra/superpowers（官方 repo）</a></td>
+          <td>Superpowers skill 框架本體</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/">Fission-AI/OpenSpec（官方 repo）</a></td>
+          <td>OpenSpec 本體</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Q3 — propose + brainstorming 社群 skill</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>來源</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://mcpmarket.com/tools/skills/openspec-explore">OpenSpec Explore Skill（mcpmarket）</a></td><td>早期階段「thinking partner」，用於探索期</td></tr>
+        <tr><td><a href="https://mcpmarket.com/tools/skills/openspec-explore-mode">OpenSpec Explore-Mode Skill</a></td><td>問題分析專用版本</td></tr>
+        <tr><td><a href="https://mcpmarket.com/tools/skills/openspec-proposal-creator">OpenSpec Proposal Creator Skill</a></td><td>Proposal 產出流程獨立 skill</td></tr>
+        <tr><td><a href="https://mcpmarket.com/es/tools/skills/openspec-brainstorming">OpenSpec Brainstorming Skill</a></td><td>整合 OpenSpec 的 brainstorming skill</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Q5 — subagent review 社群 skill</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>來源</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://mcpmarket.com/tools/skills/openspec-architecture-review">OpenSpec Review Skill（mcpmarket）</a></td><td>使用<strong>devil's advocate sub-agent</strong> 找盲點，產出 ready-for-dev 判定 — 正是 Q5 要的模式</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Q6 — archive 順序 社群證據（最強）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>來源</th><th>核心論點</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="https://intent-driven.dev/blog/2026/04/01/openspec-git-worktrees-opencode/">intent-driven.dev（2026-04-01）</a></td>
+          <td>明文規則：<em>「merge → archive, in that order, every time」</em>。警告：<em>「If you archive while still on a worktree branch, the spec merge runs against an incomplete view of main — conflicts become likely.」</em></td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/blob/main/openspec-parallel-merge-plan.md">OpenSpec 官方 openspec-parallel-merge-plan.md</a></td>
+          <td>官方承認 parallel merge 會有 archive 衝突，要跑 sync 才行</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/tomkyle/branched-openspec">tomkyle/branched-openspec</a></td>
+          <td>第三方 fork，把 branch + Conventional Commits 強制整合進 OpenSpec</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/discussions/737">Discussion #737 — Multiple changes into one spec</a></td>
+          <td>同 domain 多 change 的 archive 整合策略討論</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Q8 — 跨 session 續跑 社群方案</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>來源</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://mcpmarket.com/tools/skills/openspec-workflow-continuity-1">OpenSpec Workflow Continuity Skill（mcpmarket）</a></td><td>專門處理 cross-session 續跑，自動產下個 artifact、偵測當前狀態</td></tr>
+        <tr><td><a href="https://code.claude.com/docs/en/common-workflows">Claude Code 官方文件 — <code>--continue</code> / <code>--resume</code></a></td><td>原生 session 重開，完整恢復 message history + CLAUDE.md</td></tr>
+        <tr><td><a href="https://github.com/anthropics/claude-code/issues/44063">Issue #44063 — Resume Any Claude Session in the CLI</a></td><td>社群功能請求，證明這是共同痛點</td></tr>
+        <tr><td><a href="https://medium.com/@porter.nicholas/teaching-claude-to-remember-part-3-sessions-and-resumable-workflow-1c356d9e442f">Nick Porter — Teaching Claude To Remember: Sessions & Resumable Workflow</a></td><td>實務整合指南</td></tr>
+        <tr><td><a href="https://stevekinney.com/courses/ai-development/claude-code-session-management">Steve Kinney — Claude Code Session Management</a></td><td>課程等級的 session management 講解</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Skill 活化率實測（引用 alexop.dev + Scott Spence）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>啟用方式</th><th>Skill 自動觸發率</th></tr></thead>
+      <tbody>
+        <tr><td>只靠 skill 自己（原生）</td><td>~20%</td></tr>
+        <tr><td>+ CLAUDE.md mandatory rule</td><td>~30–50%（估）</td></tr>
+        <tr><td>+ Custom slash command</td><td>~70%+（估）</td></tr>
+        <tr><td><strong>+ UserPromptSubmit hook</strong></td><td><strong>~84%</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="mute">數據來源：<a href="https://alexop.dev/posts/custom-tdd-workflow-claude-code-vue/">alexop.dev</a> 引用 Scott Spence 的 200+ prompt 實測研究。</p>
+
+  <h3>結論</h3>
+  <div class="callout tip"><span class="label">這不是設定錯誤</span>OpenSpec + Superpowers 原生就不串接。官方 PR #970 正在補橋，但尚未 merge。本 Playbook 的 Q2 給的 4 種修復（CLAUDE.md Rule / custom command / manual prompt / hook）是現階段能用的完整解法，不需等 PR #970。</div>
+
+  <div class="callout warn"><span class="label">等不等 PR #970？</span>不建議等。PR 狀態 Open 已久，merge 時程未定；即使 merge，套用到既有專案也要重新 init。先用本 Playbook Q2 的 A+B+D 三疊加，PR merge 後再評估 migrate。</div>
 </section>
 
 <footer>
