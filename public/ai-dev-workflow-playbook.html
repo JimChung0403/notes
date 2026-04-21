@@ -724,6 +724,7 @@
   <a href="#g3" class="scenario" data-num="G3">MVP 期新功能</a>
   <a href="#g4" class="scenario" data-num="G4">早期 Refactor</a>
   <a href="#g5" class="scenario" data-num="G5">轉 Brownfield</a>
+  <a href="#greenfield-faq" style="font-weight: 600;">Greenfield 常見問題（GQ1–GQ7）</a>
 
   <h4>替代流程</h4>
   <a href="#gsd-only">6. 只用 GSD</a>
@@ -2996,6 +2997,409 @@ TDD-exempt (migration / config / pure rename):
     <div class="callout info"><span class="label">之後的生命</span>轉 Brownfield 後的所有 feature / bug / refactor 都走 <a href="#s2" style="color: var(--c-super);">Section 4 的情境 1–8</a>。Greenfield section 從此不再適用。</div>
   </div>
 
+  <!-- ============ 5.9 Greenfield Common Questions ============ -->
+  <div id="greenfield-faq" class="wide-block" style="margin-top: 48px; padding-top: 32px; border-top: 2px solid var(--border-light);">
+    <h3 style="font-size: 1.7rem; margin-bottom: 18px;">Greenfield 常見問題</h3>
+    <p class="lead">SpecKit + Superpowers 協作會碰到的 7 個問題。3 個是 <strong>SpecKit 獨有</strong>（無 archive、constitution 邊界、template 更新），4 個跟 Brownfield 同類但指令不同。每題含：社群證據 → 修復 → 觀察訊號。</p>
+
+    <h4>成本效益速查</h4>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>GQ</th>
+            <th>痛點</th>
+            <th>錯了會怎樣</th>
+            <th>頻率</th>
+            <th>建 Command？</th>
+            <th>建 Hook？</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background: rgba(255,45,85,0.06);">
+            <td><strong>GQ1</strong> <code>/speckit.implement</code> + TDD</td>
+            <td>沒 test 覆蓋</td>
+            <td><strong>回歸 bug 累積</strong></td>
+            <td>每 task</td>
+            <td><strong style="color: var(--bad);">✅ 強烈建議</strong></td>
+            <td><strong style="color: var(--bad);">✅ 強烈建議</strong></td>
+          </tr>
+          <tr style="background: rgba(255,149,0,0.06);">
+            <td><strong>GQ2</strong> Session 斷點續跑</td>
+            <td>implement 跑一半斷</td>
+            <td>重做已完成 task</td>
+            <td>每新 session</td>
+            <td><strong style="color: var(--warn);">✅ 建議</strong></td>
+            <td>❌ 意義小</td>
+          </tr>
+          <tr style="background: rgba(255,149,0,0.06);">
+            <td><strong>GQ3</strong> 實作後 spec drift（<span class="hl-speckit">SpecKit 獨有</span>）</td>
+            <td>code 變動 spec 沒更新</td>
+            <td><strong>規格永遠過時</strong>（無 archive）</td>
+            <td>每 feature 收尾</td>
+            <td><strong style="color: var(--warn);">✅ 建議</strong></td>
+            <td>❌ 意義小</td>
+          </tr>
+          <tr>
+            <td><strong>GQ4</strong> Constitution 太抽象（<span class="hl-speckit">SpecKit 獨有</span>）</td>
+            <td>AI 檢不到違規</td>
+            <td>治理層失效</td>
+            <td>Day 0 只 1 次</td>
+            <td>❌ 不適合</td>
+            <td>❌ 不適合</td>
+          </tr>
+          <tr>
+            <td><strong>GQ5</strong> SpecKit 版本更新覆蓋客製（<span class="hl-speckit">SpecKit 獨有</span>）</td>
+            <td>客製被官方 template 蓋掉</td>
+            <td>修改消失</td>
+            <td>每次升級</td>
+            <td>⚠️ 可選</td>
+            <td>❌ 意義小</td>
+          </tr>
+          <tr>
+            <td><strong>GQ6</strong> <code>/speckit.analyze</code> bug</td>
+            <td>偵測不到 spec.md / tasks.md</td>
+            <td>跨產物 review 失效</td>
+            <td>偶發</td>
+            <td>❌ 不適合</td>
+            <td>❌ 不適合</td>
+          </tr>
+          <tr>
+            <td><strong>GQ7</strong> tasks 生成後改 spec</td>
+            <td>spec / plan / tasks 不同步</td>
+            <td>返工</td>
+            <td>每次 spec 變動</td>
+            <td>⚠️ 可選</td>
+            <td>❌ 意義小</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout tip"><span class="label">優先順序</span><strong>必做</strong>：GQ1（測試）。<strong>強烈建議</strong>：GQ2（session resume）、GQ3（spec drift）。<strong>可選</strong>：GQ5、GQ7。<strong>知道就好</strong>：GQ4、GQ6。</div>
+
+    <!-- GQ1 -->
+    <details class="faq" open>
+      <summary>GQ1. <code>/speckit.implement</code> 沒啟用 Superpowers TDD，每個 task 都直接寫完怎麼辦？</summary>
+      <div class="answer">
+        <h4>跟 Brownfield Q2 同根因</h4>
+        <p>SpecKit 跟 Superpowers 也是<strong>兩套獨立系統，原生不串接</strong>。即使 constitution.md 寫了 TDD 原則，SpecKit 的 <code>/speckit.implement</code> <strong>不會</strong>自動呼叫 Superpowers 的 <code>test-driven-development</code> skill。</p>
+
+        <h4>社群證據</h4>
+        <ul class="bullets">
+          <li><a href="https://github.com/github/spec-kit/issues/2178">Issue #2178 — Claude don't execute speckit commands</a> — 報告 <code>/speckit.constitution</code> / <code>/speckit.specify</code> 等指令<strong>卡住或失敗</strong>，有 hook 相關錯誤。已 Closed（PR #2227 修復）但反映整合層脆弱。</li>
+          <li><a href="https://github.com/github/spec-kit/issues/1425">Issue #1425 — Speckit reimagined: Claude Code plugins with agent skills</a> — 社群<strong>提案重新設計</strong> SpecKit 為 Claude Code plugin，內建 skill 整合（證明目前整合不完整）。</li>
+          <li><a href="https://blog.scottlogic.com/2025/11/26/putting-spec-kit-through-its-paces-radical-idea-or-reinvented-waterfall.html">Scott Logic — Reinvented Waterfall?</a> — 實測指出 SpecKit「default constitution 偏好 TDD」但<strong>不強制</strong>，要自己在 constitution 明寫。</li>
+        </ul>
+
+        <h4>修復（跟 Brownfield Q2 同樣 4 條路徑，指令名改成 /speckit.implement）</h4>
+        <ul class="bullets">
+          <li><strong>A. CLAUDE.md Rule 2 for SpecKit</strong> — 已包含在 5.0 最佳方案的 CLAUDE.md 樣板</li>
+          <li><strong>B. Custom command <code>/speckit-implement-tdd</code></strong> — 把 Brownfield 的 <code>/opsx-apply-tdd</code> 改寫針對 <code>/speckit.implement</code>（見下）</li>
+          <li><strong>C. 手動 prompt</strong> — 見 Brownfield Q2 修復 C，把 <code>/opsx:apply</code> 替換成 <code>/speckit.implement</code></li>
+          <li><strong>D. UserPromptSubmit Hook</strong> — 把 Brownfield 的 hook 擴充偵測 <code>/speckit.implement</code>（見下）</li>
+        </ul>
+
+        <h4>修復 B：Custom command 範本（`.claude/commands/speckit-implement-tdd.md`）</h4>
+        <pre><code><span class="keyword">---</span>
+description: SpecKit /speckit.implement wrapper with strict per-task TDD enforcement
+<span class="keyword">---</span>
+
+Execute the equivalent of /speckit.implement with STRICT per-task TDD enforcement.
+
+<span class="comment">## Pre-check</span>
+- Verify .specify/memory/constitution.md exists.
+- Verify .specify/specs/{active}/tasks.md exists and has unchecked tasks.
+
+<span class="comment">## Per-task loop</span>
+For every unchecked task in tasks.md:
+
+1. Announce: "━━━ Task {N}: {description} ━━━"
+2. Activate test-driven-development skill (Superpowers)
+3. RED: Write failing test → run → show red output
+4. WAIT for user confirmation ("ok" or "continue")
+5. GREEN: Write minimal code → run → show green output
+6. REFACTOR: Clean up while keeping green
+7. Commit: &lt;type&gt;(&lt;scope&gt;): &lt;task-description&gt;
+8. Mark [x] in tasks.md
+9. Loop
+
+<span class="comment">## Exceptions</span>
+TDD-exempt (migration / config / pure rename):
+  Announce "[TDD-exempt: &lt;reason&gt;]". Never silently skip.
+
+<span class="comment">## Halt</span>
+- User: "stop" → halt at task boundary
+- Test infra broken → halt, report
+- No RED confirmation → halt</code></pre>
+
+        <h4>修復 D：Hook 擴充（加到 Brownfield Q2 的統一 hook）</h4>
+        <pre><code><span class="comment"># 在 ~/.claude/hooks/tdd-enforcement.sh 新增偵測：</span>
+
+if echo "$PROMPT" | grep -qE "/speckit\.implement|/speckit-implement"; then
+  cat &lt;&lt;'EOF'
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[TDD REMINDER — SpecKit]
+/speckit.implement detected. You MUST:
+1. Activate test-driven-development skill NOW
+2. For EACH task: RED → WAIT → GREEN → commit
+3. NEVER batch. NEVER skip RED.
+Acknowledge before proceeding.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EOF
+fi</code></pre>
+
+        <div class="callout warn"><span class="label">驗證</span>下次 <code>/speckit.implement</code> 跑第一個 task 時要看到：(1) hook 注入、(2) TDD skill 啟動宣告、(3) 寫 failing test 前有停下來、(4) 紅色 failing output 才寫 code。</div>
+      </div>
+    </details>
+
+    <!-- GQ2 -->
+    <details class="faq">
+      <summary>GQ2. <code>/speckit.implement</code> 跑一半斷線，新 session 怎麼從斷點繼續而不是重做？</summary>
+      <div class="answer">
+        <h4>社群證據</h4>
+        <ul class="bullets">
+          <li><a href="https://github.com/github/spec-kit/issues/789">Issue #789 — How to continue the implementation?</a>（<strong>Open、stale</strong>）— 使用者報告：<em>「/implement 跑一半斷線，重跑時有時從 task 1 開始，沒從斷點續跑。需要手動編輯 tasks.md 狀態嗎？」</em>目前<strong>沒有官方解法</strong>。</li>
+          <li><a href="https://mcpmarket.com/tools/skills/openspec-workflow-continuity-1">OpenSpec Workflow Continuity Skill</a>（可重用）— 雖然是 OpenSpec 的，但 detection 邏輯可套用到 SpecKit 的 tasks.md。</li>
+        </ul>
+
+        <h4>修復：Custom command <code>/speckit-resume</code></h4>
+        <p>把 Brownfield Q8 的 <code>/opsx-resume</code> 改寫，讀 <code>.specify/specs/{active}/tasks.md</code> 而非 OpenSpec 的 <code>changes/{active}/tasks.md</code>。</p>
+        <pre><code><span class="keyword">---</span>
+description: Resume SpecKit work with state detection across sessions
+<span class="keyword">---</span>
+
+<span class="comment">## Step 1: Find active feature</span>
+Look in .specify/specs/ for the most recent feature dir.
+Read its tasks.md.
+
+<span class="comment">## Step 2: Categorize tasks</span>
+- DONE: tasks with [x]
+- IN-PROGRESS: tasks [ ] but have related commits / modified files
+- NOT-STARTED: tasks [ ] with no activity
+
+Cross-reference: recent git log (10 commits), git status, tasks.md keywords.
+
+<span class="comment">## Step 3: Infer last-active phase</span>
+- Last commit = TDD RED → next: write code (GREEN)
+- Last commit = TDD GREEN → next: refactor or next task
+- Uncommitted changes in test file → mid writing test
+- Uncommitted changes in prod file → mid writing code
+
+<span class="comment">## Step 4: Report + activate skill + wait for confirmation</span>
+Display done/in-progress/not-started lists + next action guess.
+Activate test-driven-development skill (if next is implementation).
+Ask: "Correct? Confirm next action?"
+
+<span class="comment">## Halt</span>
+- No active feature → ask user to /speckit.specify first
+- Multiple active features → ask which</code></pre>
+
+        <div class="callout tip"><span class="label">或用 Claude Code 原生</span><code>claude --continue</code> / <code>claude --resume</code> 已經恢復 message history + CLAUDE.md。若沒有 tasks.md 狀態歧義，原生就夠。</div>
+      </div>
+    </details>
+
+    <!-- GQ3 -->
+    <details class="faq">
+      <summary>GQ3. 實作後發現 spec / plan / tasks 跟 code 對不上（<span class="hl-speckit">SpecKit 獨有</span>）</summary>
+      <div class="answer">
+        <h4>為什麼是 Greenfield 獨有</h4>
+        <p>OpenSpec 有 <code>/opsx:archive</code> 把 change 封存進永久 specs/，archive 時會 reconcile。<strong>SpecKit 沒有 archive</strong>，spec 永住 <code>.specify/specs/{FEATURE_ID}/</code>。若實作後 spec 沒同步更新 → <strong>規格永遠過時</strong>，下次 AI 讀舊 spec 做決策會錯。</p>
+
+        <h4>社群證據（官方也在補這個）</h4>
+        <ul class="bullets">
+          <li><a href="https://github.com/github/spec-kit/issues/1063">Issue #1063 — Feature Request: /speckit.reconcile</a>（Open，feature request）— 提案新指令，<em>「close post-implementation gaps by asking clarifying questions, then amending spec.md, plan.md, and tasks.md without creating a new feature branch」</em>。具體場景：「實作落地但導覽沒加」、「驗收條件跟實際不符」、「清理 task 沒記錄」。</li>
+          <li><a href="https://github.com/github/spec-kit/discussions/775">Discussion #775 — How do you refine a spec after having generated plan and/or tasks?</a>— 社群討論改 spec 後 plan/tasks 怎麼同步，<strong>目前無 graceful 機制</strong>。</li>
+          <li><a href="https://github.com/github/spec-kit/discussions/152">Discussion #152 — Evolving specs</a>— spec 演進策略討論。</li>
+        </ul>
+
+        <h4>修復：手動 prompt（在官方 <code>/speckit.reconcile</code> merge 前）</h4>
+        <pre><code><span class="comment"># PR merge 前跑這段</span>
+接下來做 post-implementation reconcile，模擬官方 /speckit.reconcile。
+步驟：
+
+1. 讀 .specify/specs/{active}/spec.md 的 user story + acceptance criteria
+2. 讀實際 code（git diff main...HEAD）
+3. 逐條驗收條件檢查：
+   - 已實作 → 確認 spec 描述還準確
+   - 未實作 → 標記 [UNIMPLEMENTED]
+   - code 有但 spec 沒寫 → 標記 [UNDOCUMENTED]
+4. 讀 plan.md 的 contracts/ 和 data-model.md：
+   - 實際 schema 跟設計一致？對不上標記
+5. 讀 tasks.md：
+   - 有遺漏的 cleanup task（整合 test、wiring、docs）？列出
+6. 產出修復清單給我 review
+7. 我確認後 amend spec.md / plan.md / tasks.md
+
+不要自己改檔案，先列清單。</code></pre>
+
+        <h4>修復：Custom command <code>/speckit-reconcile</code>（推薦建）</h4>
+        <p>把上面 prompt 包成 <code>.claude/commands/speckit-reconcile.md</code>，PR merge 前固定跑一次。</p>
+
+        <div class="callout warn"><span class="label">為什麼非做不可</span>SpecKit 沒 archive 代表 <code>.specify/specs/</code> 是「活的永久規格」—— 不像 OpenSpec archive 後有時間戳可追溯。spec drift 在 SpecKit 是<strong>看不到就永遠存在</strong>。</div>
+      </div>
+    </details>
+
+    <!-- GQ4 -->
+    <details class="faq">
+      <summary>GQ4. Constitution 寫太抽象，AI 根本檢不到違規（<span class="hl-speckit">SpecKit 獨有</span>）</summary>
+      <div class="answer">
+        <h4>社群證據</h4>
+        <ul class="bullets">
+          <li><a href="https://github.com/github/spec-kit/issues/1149">Issue #1149 — Clarify boundary between constitution principles and specification details</a>— 使用者困惑：<em>什麼該放 constitution、什麼該放 spec？</em>官方討論中。</li>
+          <li><a href="https://blog.lpains.net/posts/2025-12-07-deep-dive-into-speckit/">LPains — Deep Dive into SpecKit</a>— 明確指出：<em>「如果 constitution 太泛（如『寫高品質 code』），AI 無法 effective check。Constitution must be verifiable and specific.」</em></li>
+        </ul>
+
+        <h4>修復：Constitution 要寫成「可驗證」格式</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>❌ 太抽象（AI 檢不到）</th><th>✅ 可驗證（AI 能執行）</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>「寫高品質 code」</td>
+                <td>「所有 public function 必須有 JSDoc / docstring，含 params / returns / throws」</td>
+              </tr>
+              <tr>
+                <td>「要有良好錯誤處理」</td>
+                <td>「所有 async function 必須用 try/catch；errors 必須繼承自 AppError 基類並含 error code」</td>
+              </tr>
+              <tr>
+                <td>「要考慮效能」</td>
+                <td>「任何迴圈內的 DB 查詢必須標記並證明為何不能 batch；N+1 query 在 PR 被擋」</td>
+              </tr>
+              <tr>
+                <td>「要模組化」</td>
+                <td>「單一檔案 &gt; 300 行 → 拆檔；單一函式 &gt; 50 行 → 拆 helper；cyclomatic complexity 閾值 10」</td>
+              </tr>
+              <tr>
+                <td>「follow REST」</td>
+                <td>「所有 API endpoint 格式 <code>/api/v{N}/{resource}/{id}</code>；必須支援 GET/POST/PATCH/DELETE；錯誤回 RFC 7807 Problem Details JSON」</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Constitution 邊界判斷（#1149 的討論共識）</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>放 constitution.md</th><th>放 spec.md</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>跨 feature 都適用的原則（coding style / 架構規則 / 合規）</td>
+                <td>該 feature 特有的行為（user flow / 驗收條件）</td>
+              </tr>
+              <tr>
+                <td>全專案生命期都不會變的約束</td>
+                <td>該 feature 的 scope boundary</td>
+              </tr>
+              <tr>
+                <td>AI 實作時應<strong>每次都對齊</strong>的 rule</td>
+                <td>AI 實作時應<strong>只看一次</strong>的規格</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout tip"><span class="label">驗證方式</span>定稿前跑一次：「根據 constitution.md，列出 3 個違反原則的 code 範例，和 3 個合規範例。」AI 舉不出例 = constitution 太抽象，要改寫得更具體。</div>
+      </div>
+    </details>
+
+    <!-- GQ5 -->
+    <details class="faq">
+      <summary>GQ5. SpecKit 官方更新 template，我的客製被覆蓋（<span class="hl-speckit">SpecKit 獨有</span>）</summary>
+      <div class="answer">
+        <h4>社群證據</h4>
+        <ul class="bullets">
+          <li><a href="https://blog.lpains.net/posts/2025-12-07-deep-dive-into-speckit/">LPains — Deep Dive into SpecKit</a>提到：<em>「When Spec Kit officially releases new versions updating templates, user customizations may be overwritten.」</em></li>
+          <li>社群建的 <strong>SpecKit Safe Update Skill</strong>（PowerShell + VSCode 3-way merge）— 讓官方更新跟本地客製做智慧合併。</li>
+        </ul>
+
+        <h4>修復（3 種選擇）</h4>
+        <ol class="bullets">
+          <li><strong>（推薦）</strong>把客製放 <code>.specify/templates/overrides/</code>（SpecKit 有內建 overrides 機制 → 優先序 Project overrides &gt; Presets &gt; Extensions &gt; Core templates）</li>
+          <li>不直接改 core template，改用 Presets / Extensions 機制：<code>specify preset add &lt;name&gt;</code> / <code>specify extension add &lt;name&gt;</code></li>
+          <li>升級前先 <code>git diff</code> 確認哪些 <code>.specify/</code> 檔案有本地改動，手動挑選 merge</li>
+        </ol>
+
+        <h4>升級 SOP</h4>
+        <pre><code><span class="comment"># Step 1: 確認本地改動範圍</span>
+git log --oneline .specify/
+
+<span class="comment"># Step 2: branch 備份</span>
+git checkout -b backup-before-speckit-upgrade
+
+<span class="comment"># Step 3: 升級</span>
+uv tool upgrade specify-cli
+specify init --here --merge   <span class="comment"># --merge 保留客製</span>
+
+<span class="comment"># Step 4: review diff</span>
+git diff main .specify/
+
+<span class="comment"># Step 5: 客製若被覆蓋 → 手動 merge 回來（VSCode 3-way merge 介面最順）</span></code></pre>
+      </div>
+    </details>
+
+    <!-- GQ6 -->
+    <details class="faq">
+      <summary>GQ6. <code>/speckit.analyze</code> 抓不到 spec.md / tasks.md 的 known bug</summary>
+      <div class="answer">
+        <h4>社群證據</h4>
+        <ul class="bullets">
+          <li><a href="https://github.com/github/spec-kit/issues/1114">Issue #1114 — speckit.analyze.prompt.md causes confusion with check-prerequisites.sh</a>— 報告：analyze prompt 要 agent 用 <code>--include-tasks</code>，但 AVAILABLE_DOCS 沒列 spec.md / tasks.md → agent 誤判檔案不存在。</li>
+        </ul>
+
+        <h4>Workaround（官方修復前）</h4>
+        <pre><code><span class="comment"># 跑 /speckit.analyze 前手動確認檔案路徑</span>
+ls -la .specify/specs/{active}/spec.md
+ls -la .specify/specs/{active}/tasks.md
+
+<span class="comment"># 若 analyze 報找不到 → 明確告訴 Claude：</span>
+「spec.md 在 .specify/specs/{FEATURE}/spec.md
+ tasks.md 在 .specify/specs/{FEATURE}/tasks.md
+ 請以這兩個檔案為 source 跑 analyze。」</code></pre>
+
+        <div class="callout tip"><span class="label">知道就好</span>這是已知 bug，官方會修。暫時 workaround 即可，不用建 command 或 hook。</div>
+      </div>
+    </details>
+
+    <!-- GQ7 -->
+    <details class="faq">
+      <summary>GQ7. 已產 tasks.md 後想改 spec，怎麼讓 plan / tasks 同步更新？</summary>
+      <div class="answer">
+        <h4>社群證據</h4>
+        <ul class="bullets">
+          <li><a href="https://github.com/github/spec-kit/discussions/775">Discussion #775 — How do you refine a spec after having generated plan and/or tasks?</a>— 社群討論此題，<strong>目前無 graceful 機制</strong>，用戶多半手動刪掉 plan / tasks 重跑。</li>
+        </ul>
+
+        <h4>3 種做法（依改動大小）</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>改動大小</th><th>做法</th></tr></thead>
+            <tbody>
+              <tr><td>微調 spec 文字</td><td>手動改 <code>spec.md</code>，不動 plan/tasks（若影響極小）</td></tr>
+              <tr><td>改驗收條件</td><td>手動改 <code>spec.md</code> → 跑 <code>/speckit.analyze</code> 找 drift → 人工決定要不要重跑 <code>/speckit.plan</code> / <code>/speckit.tasks</code></td></tr>
+              <tr><td>改 scope / 新增驗收條件</td><td>刪 <code>plan.md</code> / <code>tasks.md</code> → 改 <code>spec.md</code> → 重跑 <code>/speckit.plan</code> → <code>/speckit.tasks</code>（等於重新過一次）</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>手動 prompt 模板</h4>
+        <pre><code>我改了 spec.md 的驗收條件（新增：XYZ）。
+幫我判斷：
+
+1. plan.md 是否受影響？列出具體段落
+2. tasks.md 是否需要新增 / 修改 / 刪除 task？列出具體 task
+3. 若改動小 → 告訴我精確的 diff 讓我手動 apply
+4. 若改動大 → 建議刪掉 plan/tasks 重跑
+
+不要直接改檔案，先列計畫。</code></pre>
+
+        <div class="callout tip"><span class="label">預防</span>寫 spec 時多花 5 分鐘跑 <code>/speckit.clarify</code>，能避免 80% 的事後 refine。</div>
+      </div>
+    </details>
+
+  </div>
+
 </section>
 
 <!-- ============ 6. GSD-only ============ -->
@@ -4365,6 +4769,75 @@ See `docs/ai-dev-workflow-playbook.html` for detailed scenarios:
         <tr>
           <td><a href="https://github.com/Fission-AI/OpenSpec/discussions/737">Discussion #737 — Multiple changes into one spec</a></td>
           <td>同 domain 多 change 的 archive 整合策略討論</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Greenfield GQ1–GQ7 社群證據（SpecKit 專屬）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>GQ</th><th>來源</th><th>說明</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>GQ1</strong> TDD 整合</td>
+          <td><a href="https://github.com/github/spec-kit/issues/2178">Issue #2178</a></td>
+          <td>speckit commands 不執行（hook / skill 錯誤）。已 Closed by PR #2227，反映整合層脆弱</td>
+        </tr>
+        <tr>
+          <td><strong>GQ1</strong></td>
+          <td><a href="https://github.com/github/spec-kit/issues/1425">Issue #1425</a></td>
+          <td>社群提案重新設計 SpecKit 為 Claude Code plugin + agent skills（證明目前整合不完整）</td>
+        </tr>
+        <tr>
+          <td><strong>GQ1</strong></td>
+          <td><a href="https://blog.scottlogic.com/2025/11/26/putting-spec-kit-through-its-paces-radical-idea-or-reinvented-waterfall.html">Scott Logic — Reinvented Waterfall?</a></td>
+          <td>實測 SpecKit，指出 constitution 偏好 TDD 但不強制</td>
+        </tr>
+        <tr>
+          <td><strong>GQ2</strong> Session resume</td>
+          <td><a href="https://github.com/github/spec-kit/issues/789">Issue #789</a></td>
+          <td>「/implement 跑一半斷線，重跑有時從 task 1 開始」— <strong>Open、stale</strong>，無官方解</td>
+        </tr>
+        <tr>
+          <td><strong>GQ3</strong> Spec drift（SpecKit 獨有）</td>
+          <td><a href="https://github.com/github/spec-kit/issues/1063">Issue #1063</a></td>
+          <td>Feature request：<code>/speckit.reconcile</code> — 實作後 amend spec/plan/tasks 不建新 branch。Open，未 merge</td>
+        </tr>
+        <tr>
+          <td><strong>GQ3</strong></td>
+          <td><a href="https://github.com/github/spec-kit/discussions/775">Discussion #775</a></td>
+          <td>「tasks 生成後怎麼 refine spec」— 目前無 graceful 機制</td>
+        </tr>
+        <tr>
+          <td><strong>GQ3</strong></td>
+          <td><a href="https://github.com/github/spec-kit/discussions/152">Discussion #152</a></td>
+          <td>Evolving specs 策略討論</td>
+        </tr>
+        <tr>
+          <td><strong>GQ4</strong> Constitution 抽象</td>
+          <td><a href="https://github.com/github/spec-kit/issues/1149">Issue #1149</a></td>
+          <td>「constitution 原則 vs spec 細節邊界不清」— 官方討論中</td>
+        </tr>
+        <tr>
+          <td><strong>GQ4</strong></td>
+          <td><a href="https://blog.lpains.net/posts/2025-12-07-deep-dive-into-speckit/">LPains — Deep Dive into SpecKit</a></td>
+          <td>「constitution 太泛（『寫高品質 code』）AI 無法 effective check」— constitution must be verifiable</td>
+        </tr>
+        <tr>
+          <td><strong>GQ5</strong> Template 覆蓋</td>
+          <td><a href="https://blog.lpains.net/posts/2025-12-07-deep-dive-into-speckit/">LPains — Deep Dive</a></td>
+          <td>「官方更新 templates，user customizations may be overwritten」；社群建 SpecKit Safe Update Skill（PowerShell + 3-way merge）</td>
+        </tr>
+        <tr>
+          <td><strong>GQ6</strong> analyze bug</td>
+          <td><a href="https://github.com/github/spec-kit/issues/1114">Issue #1114</a></td>
+          <td><code>speckit.analyze</code> 跟 <code>check-prerequisites.sh</code> 衝突，AVAILABLE_DOCS 沒列 spec.md / tasks.md → agent 誤判</td>
+        </tr>
+        <tr>
+          <td><strong>GQ7</strong> Spec refine</td>
+          <td><a href="https://github.com/github/spec-kit/discussions/775">Discussion #775</a></td>
+          <td>改 spec 後 plan/tasks 同步無機制，多半刪掉重跑</td>
         </tr>
       </tbody>
     </table>
