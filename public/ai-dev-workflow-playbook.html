@@ -714,7 +714,7 @@
   <a href="#s6" class="scenario" data-num="6">重構 / 技術債</a>
   <a href="#s7" class="scenario" data-num="7">Spike 可行性</a>
   <a href="#s8" class="scenario" data-num="8">依賴 / 安全修補</a>
-  <a href="#brownfield-faq" style="font-weight: 600;">Brownfield 常見問題（Q1–Q8）</a>
+  <a href="#brownfield-faq" style="font-weight: 600;">Brownfield 常見問題（Q1–Q9）</a>
 
   <h4>Greenfield 情境</h4>
   <a href="#greenfield">5. Greenfield 開發情境</a>
@@ -731,12 +731,13 @@
   <a href="#openspec-only">7. 只用 OpenSpec</a>
   <a href="#superpowers-only">8. 只用 Superpowers</a>
   <a href="#speckit-only">9. 只用 SpecKit</a>
-  <a href="#matrix">10. 能力矩陣</a>
+  <a href="#ccsdd-only">10. 只用 cc-sdd</a>
+  <a href="#matrix">11. 能力矩陣</a>
 
   <h4>其他</h4>
-  <a href="#faq">11. 常見困惑</a>
-  <a href="#appendix">12. CLAUDE.md 樣板</a>
-  <a href="#references">13. 外部參考資料</a>
+  <a href="#faq">12. 常見困惑</a>
+  <a href="#appendix">13. CLAUDE.md 樣板</a>
+  <a href="#references">14. 外部參考資料</a>
 </aside>
 
 <!-- ============ Main ============ -->
@@ -835,7 +836,7 @@ npx @fission-ai/openspec init
 <span class="comment"># 裝完 reload 讓 skill 生效</span>
 /reload-plugins</code></pre>
 
-  <div class="callout info"><span class="label">為什麼只裝 mapper</span>完整 GSD 適合「只用 GSD」的替代流程（Section 6）。本 Playbook 主流程（OpenSpec + Superpowers）<strong>只需要 gsd-codebase-mapper 這一個 skill</strong> 來產 <code class="inline">.gsd/*.md</code>，其他 GSD 指令不會用到。</div>
+  <div class="callout info"><span class="label">為什麼只裝 mapper</span>完整 GSD 適合「只用 GSD」的替代流程（Section 6）。本 Playbook 主流程（OpenSpec + Superpowers）<strong>只需要 gsd-codebase-mapper 這一個 skill</strong> 來產 <code class="inline">.planning/codebase/*.md</code>，其他 GSD 指令不會用到。</div>
   <div class="callout tip"><span class="label">若要走 Section 6（只用 GSD）</span>改成安裝完整 GSD：<code class="inline">git clone https://github.com/gsd-build/gsd-2 ~/.claude/skills/gsd</code>。詳見 Section 6。</div>
 
   <h3>0.2 CLAUDE.md 必備三條規則</h3>
@@ -860,7 +861,7 @@ No exceptions. Enforce via pre-merge Git hook.</code></pre>
   <h3>0.3 導入後目錄結構</h3>
   <pre><code>your-repo/
 ├── .claude/commands/          <span class="comment"># 註冊 slash commands</span>
-├── .gsd/                      <span class="comment"># 0.4 產出的 codebase maps</span>
+├── .planning/codebase/                      <span class="comment"># 0.4 產出的 codebase maps</span>
 │   ├── STACK.md
 │   ├── INTEGRATIONS.md
 │   ├── ARCHITECTURE.md
@@ -900,7 +901,7 @@ No exceptions. Enforce via pre-merge Git hook.</code></pre>
     </table>
   </div>
 
-  <p class="mute">產出位置：<code class="inline">.gsd/</code> 目錄。每份文件會包含實際檔案路徑（backtick 格式），方便 Claude 直接跳到 code。</p>
+  <p class="mute">產出位置：<code class="inline">.planning/codebase/</code> 目錄。每份文件會包含實際檔案路徑（backtick 格式），方便 Claude 直接跳到 code。</p>
 
   <pre><code><span class="comment"># 在 Claude Code 裡執行</span>
 /gsd:map-codebase
@@ -926,7 +927,7 @@ No exceptions. Enforce via pre-merge Git hook.</code></pre>
   <div class="callout warn"><span class="label">為什麼不可省</span>每個 feature 的 Step 1（讀懂）會引用這 7+ 份檔案，讓 OpenSpec 的 <code class="inline">/opsx:propose</code> 不會憑空設計跟既有架構打架的 schema / API。跳過這步 → AI 產出的 migration 很可能撞既有 table。</div>
 
   <h3>0.5 設定 openspec/config.yaml（專案共用設定）</h3>
-  <p class="mute">OpenSpec 初始化（<code class="inline">npx @fission-ai/openspec init</code>）會產一份 <code class="inline">openspec/config.yaml</code>。這份檔案<strong>會進 Git、被團隊共用</strong>，定義「每次跑 <code class="inline">/opsx:*</code> 自動注入什麼 context 跟套什麼規則」。<strong>把 0.4 產出的 <code class="inline">.gsd/</code> maps 連結進來，讓 OpenSpec 指令永遠看到它們。</strong></p>
+  <p class="mute">OpenSpec 初始化（<code class="inline">npx @fission-ai/openspec init</code>）會產一份 <code class="inline">openspec/config.yaml</code>。這份檔案<strong>會進 Git、被團隊共用</strong>，定義「每次跑 <code class="inline">/opsx:*</code> 自動注入什麼 context 跟套什麼規則」。<strong>把 0.4 產出的 <code class="inline">.planning/codebase/</code> maps 連結進來，讓 OpenSpec 指令永遠看到它們。</strong></p>
 
   <h4>三個欄位</h4>
   <div class="table-wrap">
@@ -950,13 +951,13 @@ context: |
   Testing: Jest + React Testing Library
 
   <span class="comment"># Codebase Maps (MUST consult before any design decision)</span>
-  - .gsd/ARCHITECTURE.md  (API & data flow style)
-  - .gsd/STRUCTURE.md     (module layout)
-  - .gsd/CONVENTIONS.md   (naming, linting)
-  - .gsd/STACK.md         (approved libraries)
-  - .gsd/TESTING.md       (test patterns)
-  - .gsd/INTEGRATIONS.md  (external services)
-  - .gsd/CONCERNS.md      (known pitfalls — avoid)
+  - .planning/codebase/ARCHITECTURE.md  (API & data flow style)
+  - .planning/codebase/STRUCTURE.md     (module layout)
+  - .planning/codebase/CONVENTIONS.md   (naming, linting)
+  - .planning/codebase/STACK.md         (approved libraries)
+  - .planning/codebase/TESTING.md       (test patterns)
+  - .planning/codebase/INTEGRATIONS.md  (external services)
+  - .planning/codebase/CONCERNS.md      (known pitfalls — avoid)
 
   <span class="comment"># Incoming Specs</span>
   PM specs arrive at: docs/incoming-specs/{feature}.md
@@ -969,13 +970,13 @@ rules:
   proposal:
     - Include rollback plan for any DB or API change
     - Identify affected teams / services
-    - Reference .gsd/CONCERNS.md for known pitfalls
+    - Reference .planning/codebase/CONCERNS.md for known pitfalls
 
   design:
-    - API endpoints MUST follow .gsd/ARCHITECTURE.md patterns
+    - API endpoints MUST follow .planning/codebase/ARCHITECTURE.md patterns
     - Deviations MUST be labeled <span class="string">"【AI 建議】"</span> with rationale
-    - Schema changes MUST align with .gsd/STRUCTURE.md
-    - Library choices MUST come from .gsd/STACK.md (or propose addition)
+    - Schema changes MUST align with .planning/codebase/STRUCTURE.md
+    - Library choices MUST come from .planning/codebase/STACK.md (or propose addition)
 
   specs:
     - Use Given/When/Then format
@@ -984,8 +985,8 @@ rules:
 
   tasks:
     - Each task estimated 15–60 minutes
-    - Each task references PM spec section OR .gsd/ file
-    - Test-writing tasks follow .gsd/TESTING.md patterns</code></pre>
+    - Each task references PM spec section OR .planning/codebase/ file
+    - Test-writing tasks follow .planning/codebase/TESTING.md patterns</code></pre>
 
   <h4>跟 CLAUDE.md 的分工</h4>
   <div class="table-wrap">
@@ -998,21 +999,21 @@ rules:
     </table>
   </div>
 
-  <div class="callout tip"><span class="label">分工原則</span><strong>通用紀律放 CLAUDE.md；規格層規則放 config.yaml</strong>。例如「必跑 TDD」放 CLAUDE.md；「design.md 內 API 必須對齊 .gsd/ARCHITECTURE.md」放 config.yaml。</div>
+  <div class="callout tip"><span class="label">分工原則</span><strong>通用紀律放 CLAUDE.md；規格層規則放 config.yaml</strong>。例如「必跑 TDD」放 CLAUDE.md；「design.md 內 API 必須對齊 .planning/codebase/ARCHITECTURE.md」放 config.yaml。</div>
 
   <h4>更新時機</h4>
   <ul class="bullets">
     <li>技術棧改變（新框架、換 DB、新 library）</li>
-    <li><code>.gsd/</code> maps refresh 後同步更新 <code>context</code> 裡的引用</li>
+    <li><code>.planning/codebase/</code> maps refresh 後同步更新 <code>context</code> 裡的引用</li>
     <li>新增某類 artifact 的規則時</li>
     <li>Sprint retrospective 發現某條規則無效或缺規則時</li>
   </ul>
 
-  <div class="callout warn"><span class="label">注意</span><code>context</code> 欄位硬上限 <strong>50KB</strong>。<strong>不要把 <code>.gsd/</code> 檔案整個貼進來</strong> —— 只放「該讀哪個檔」的指引，AI 會用 <code>@-reference</code> 實際去讀。貼整份檔 = 浪費 config 空間 + 每次變更要同步更新兩處。</div>
+  <div class="callout warn"><span class="label">注意</span><code>context</code> 欄位硬上限 <strong>50KB</strong>。<strong>不要把 <code>.planning/codebase/</code> 檔案整個貼進來</strong> —— 只放「該讀哪個檔」的指引，AI 會用 <code>@-reference</code> 實際去讀。貼整份檔 = 浪費 config 空間 + 每次變更要同步更新兩處。</div>
 
   <div class="callout good"><span class="label">三層護欄總覽</span>
     <ol class="bullets" style="margin-top: 8px;">
-      <li><strong>CLAUDE.md @-references</strong>（Layer 1）— Claude Code 全域自動載入 <code>.gsd/</code> 檔</li>
+      <li><strong>CLAUDE.md @-references</strong>（Layer 1）— Claude Code 全域自動載入 <code>.planning/codebase/</code> 檔</li>
       <li><strong>CLAUDE.md mandatory rules</strong>（Layer 2）— 強制 TDD / review / archive</li>
       <li><strong>openspec/config.yaml</strong>（Layer 3）— OpenSpec 指令層 artifact 規則</li>
     </ol>
@@ -1334,7 +1335,7 @@ User: /opsx:propose "..." (基於 exploration 的結論)</code></pre>
       <div class="meta-item"><span class="ml">關鍵風險</span>最常見 — 跳過某個階段，尤其是回寫</div>
     </div>
 
-    <div class="callout info"><span class="label">前置檢查</span>開工前先確認 <code class="inline">.gsd/</code> 目錄的 codebase maps 是最新版本（產出自 <a href="#setup" style="color: var(--c-super);">Section 0.4</a>）。若 &gt; 3 個月沒跑，先執行 <code class="inline">/gsd:map-codebase</code> refresh，再進 Step 1。</div>
+    <div class="callout info"><span class="label">前置檢查</span>開工前先確認 <code class="inline">.planning/codebase/</code> 目錄的 codebase maps 是最新版本（產出自 <a href="#setup" style="color: var(--c-super);">Section 0.4</a>）。若 &gt; 3 個月沒跑，先執行 <code class="inline">/gsd:map-codebase</code> refresh，再進 Step 1。</div>
 
     <h4>Step 1 起手式（PM spec 詳細度依賴流程）</h4>
     <p class="mute">PM 交付的 spec 通常有三種詳細度，對應不同起手法：</p>
@@ -1349,7 +1350,7 @@ User: /opsx:propose "..." (基於 exploration 的結論)</code></pre>
           </tr>
           <tr>
             <td><strong>中等</strong>（鎖 scope + 提到部分資料表與欄位值）<br><span class="mute" style="font-size: 0.82rem;">← 最常見</span></td>
-            <td>PM spec → <code>docs/incoming-specs/</code><br>/opsx:propose 同時引用 PM spec 與 <code>.gsd/</code> maps（見下方範例）</td>
+            <td>PM spec → <code>docs/incoming-specs/</code><br>/opsx:propose 同時引用 PM spec 與 <code>.planning/codebase/</code> maps（見下方範例）</td>
           </tr>
           <tr>
             <td><strong>模糊</strong>（只有需求描述）</td>
@@ -1364,23 +1365,23 @@ User: /opsx:propose "..." (基於 exploration 的結論)</code></pre>
 
 Source material:
 - PM spec: @docs/incoming-specs/{feature}.md
-- Codebase context: @.gsd/ARCHITECTURE.md @.gsd/CONVENTIONS.md @.gsd/STACK.md @.gsd/STRUCTURE.md
+- Codebase context: @.planning/codebase/ARCHITECTURE.md @.planning/codebase/CONVENTIONS.md @.planning/codebase/STACK.md @.planning/codebase/STRUCTURE.md
 
 規則：
 
 【鎖定 - 不得改動】
 1. scope、驗收條件 → 照 PM spec
 2. PM 指定的既有資料表 / 欄位 / 值 → 保留
-3. 遵守 <span class="string">.gsd/CONVENTIONS.md</span> 的命名風格與 linting 規則
+3. 遵守 <span class="string">.planning/codebase/CONVENTIONS.md</span> 的命名風格與 linting 規則
 
 【開放 - AI 設計，但需標註】
-4. API endpoint → 沿用 <span class="string">.gsd/ARCHITECTURE.md</span> 的 API 風格設計，標 "【AI 建議】"
-5. 新欄位 / 新資料表 → 對齊 <span class="string">.gsd/STRUCTURE.md</span> 的模組劃分
-6. 測試 → 照 <span class="string">.gsd/TESTING.md</span> 的既有 pattern
+4. API endpoint → 沿用 <span class="string">.planning/codebase/ARCHITECTURE.md</span> 的 API 風格設計，標 "【AI 建議】"
+5. 新欄位 / 新資料表 → 對齊 <span class="string">.planning/codebase/STRUCTURE.md</span> 的模組劃分
+6. 測試 → 照 <span class="string">.planning/codebase/TESTING.md</span> 的既有 pattern
 
 【硬規則】
-7. 使用既有表時，欄位型別必須對齊 <span class="string">.gsd/</span> 相關文件
-8. 若踩到 <span class="string">.gsd/CONCERNS.md</span> 提到的已知問題 → 在 design.md 標註處理方式
+7. 使用既有表時，欄位型別必須對齊 <span class="string">.planning/codebase/</span> 相關文件
+8. 若踩到 <span class="string">.planning/codebase/CONCERNS.md</span> 提到的已知問題 → 在 design.md 標註處理方式
 9. 模糊或衝突處 → 列在 Open Questions，不自行假設</code></pre>
 
     <h4>完整指令序列</h4>
@@ -1719,14 +1720,22 @@ Source material:
             <td>重做已完成 task</td>
             <td>浪費時間</td>
             <td>每新 session</td>
-            <td>⚠️ 可選</td>
+            <td><strong style="color: var(--good);">✅ 已做</strong></td>
             <td>❌ 意義小</td>
+          </tr>
+          <tr style="background: rgba(255,45,85,0.06);">
+            <td><strong>Q9</strong> propose 產 tasks 但 specs/ 有空目錄</td>
+            <td>SDD 順序被破壞</td>
+            <td><strong>規格殘缺 → tasks 失準 → apply 寫錯 code</strong></td>
+            <td>每次 propose 有風險</td>
+            <td><strong style="color: var(--bad);">✅ 已做</strong></td>
+            <td><strong style="color: var(--bad);">✅ 已做</strong></td>
           </tr>
         </tbody>
       </table>
     </div>
     <div class="callout tip"><span class="label">優先順序</span>
-      <strong>損失不可逆 → 必做</strong>：Q2（測試）、Q5（review）、Q6（archive 順序）。
+      <strong>損失不可逆 → 必做</strong>：Q2（測試）、Q5（review）、Q6（archive 順序）、<strong>Q9（SDD 順序）</strong>。
       <strong>效率問題 → 有方案但可選</strong>：Q3、Q8（附社群 skill 可直接裝）。
       <strong>仍用手動 prompt</strong>：Q4（行為驗證）。
       <strong>不適合工具化</strong>：Q7（決策問題）。
@@ -2337,6 +2346,199 @@ Wait for user input before continuing any work.
       </div>
     </details>
 
+    <!-- Q9 -->
+    <details class="faq">
+      <summary>Q9. <code>/opsx:propose</code> 產 <code>tasks.md</code> 但 <code>specs/</code> 裡有空目錄 / 缺 <code>spec.md</code>，SDD 順序被破壞怎麼辦？</summary>
+      <div class="answer">
+        <h4>問題情境（實際案例）</h4>
+        <pre><code>changes/add-query-confirmation-before-execution/
+├── design.md                          ✅
+├── proposal.md                        ✅
+├── specs/
+│   ├── bv/                            ❌ 空目錄（無 spec.md）
+│   ├── cc/                            ❌ 空目錄
+│   ├── dd/                            ❌ 空目錄
+│   └── query-confirmation-dialog/
+│       └── spec.md                    ✅ 只有這個完整
+└── tasks.md                           ⚠️ 已產出但前面 3 個 capability 的 spec 沒寫完</code></pre>
+
+        <h4>為什麼發生</h4>
+        <p>OpenSpec 官方設計意圖是 <strong>proposal → specs → design → tasks</strong>，但 <code>/opsx:propose</code> 和 <code>/opsx:ff</code> 是<strong>一次 pass</strong>產全部 artifact，<strong>沒有硬 gate 強制「完成 N 才能做 N+1」</strong>。AI 在一個 pass 中：</p>
+        <ol class="bullets">
+          <li>分析 proposal → 辨識需要 N 個 capability 改動</li>
+          <li>創建 N 個資料夾（佔位）</li>
+          <li>只寫完 1-2 個 <code>spec.md</code></li>
+          <li>「覺得資訊夠了」→ 直接產 tasks.md</li>
+          <li>返回「完成」</li>
+        </ol>
+        <p>這是 LLM 在「multi-artifact one-pass」生成時的經典問題。</p>
+
+        <h4>社群證據（3 個 Open GitHub Issue）</h4>
+        <ul class="bullets">
+          <li><a href="https://github.com/Fission-AI/OpenSpec/issues/783">Issue #783 — Cross-artifact quality review</a>（<strong>Open</strong>）— 官方承認 <code>/opsx:propose</code> / <code>/opsx:ff</code> 一次產全部 artifact 但<strong>沒有 validation 檢查一致性</strong>。要補的正是：spec gap、重複、missing abstraction、file bloat</li>
+          <li><a href="https://github.com/Fission-AI/OpenSpec/issues/705">Issue #705 — Support Rebuilding Downstream Artifacts</a>（<strong>Open</strong>）— 改了 upstream（proposal.md / design.md）後沒有 built-in 指令重產 downstream（tasks.md）。目前 workaround「都很爛」（手工改 prompt / 刪檔重跑 / 寫 script）</li>
+          <li><a href="https://github.com/Fission-AI/OpenSpec/issues/490">Issue #490 — /openspec:proposal Generates Non-Standard proposal.md</a>— template 本身有 drift</li>
+          <li><a href="https://redreamality.com/garden/notes/openspec-guide/">Redreamality — OpenSpec Deep Dive</a>指出：<em>「Semantic duplication is invisible to format validation — <code>openspec validate</code> catches structural issues but <strong>can't detect</strong> that a task duplicates an existing spec's capability.」</em></li>
+        </ul>
+
+        <h4>修復 A｜<code>openspec validate</code>（不夠，但先用）</h4>
+        <pre><code><span class="comment"># 內建指令，檢查格式</span>
+openspec validate add-query-confirmation-before-execution</code></pre>
+        <div class="callout warn"><span class="label">局限</span><code>openspec validate</code> 只檢<strong>格式</strong>（必要 section 存在、markdown 結構合法），<strong>不檢語意</strong>。你那些 <code>bv/</code>、<code>cc/</code>、<code>dd/</code> 空目錄 validator 看不見。會誤報「全部通過」。</div>
+
+        <h4>修復 B｜Custom slash command <code>/opsx-verify-specs</code>（推薦）</h4>
+        <p>把語意層檢查寫成 command。檔案 <code>.claude/commands/opsx-verify-specs.md</code>：</p>
+        <pre><code><span class="keyword">---</span>
+description: Verify OpenSpec change has complete specs before apply (semantic check)
+<span class="keyword">---</span>
+
+Verify an OpenSpec change proposal has complete artifacts before /opsx:apply.
+
+<span class="comment">## Step 1: Pick active change</span>
+Find the active (non-archived) change in `changes/`.
+If multiple, ask user which.
+
+<span class="comment">## Step 2: Structural check (openspec validate)</span>
+Run: openspec validate &lt;change-name&gt;
+If fails → HALT and report.
+
+<span class="comment">## Step 3: Capability folder completeness</span>
+For each directory under `changes/&lt;name&gt;/specs/`:
+- MUST have a `spec.md` file
+- `spec.md` MUST contain at least one ADDED / MODIFIED / REMOVED Requirements section
+- `spec.md` MUST NOT be empty or placeholder
+
+Report missing / empty / placeholder files as:
+  ❌ MISSING: specs/bv/spec.md
+  ❌ EMPTY:   specs/cc/spec.md (0 bytes)
+  ❌ STUB:    specs/dd/spec.md (no Requirements sections)
+
+<span class="comment">## Step 4: tasks.md ↔ specs/ cross-reference</span>
+Read `tasks.md`. For each task description:
+- Identify which capability it touches (keyword match)
+- Verify that capability has a spec.md in specs/
+- Flag tasks referencing capabilities with no spec
+
+Report:
+  ⚠️ Task 3 "implement bv validator" → specs/bv/ has no spec.md
+  ⚠️ Task 7 has no matching capability in specs/
+
+<span class="comment">## Step 5: proposal ↔ specs cross-reference</span>
+Read `proposal.md` acceptance criteria.
+For each AC:
+- Find which spec.md (if any) covers it
+- Flag ACs not covered in any spec.md
+
+<span class="comment">## Step 6: Report</span>
+Show summary:
+  ✅ OK: {count} capabilities with complete spec.md
+  ❌ Missing: {count} capabilities
+  ⚠️ Tasks without matching spec: {count}
+  ⚠️ ACs without matching spec: {count}
+
+If any ❌ → HALT. User must fix before /opsx:apply.
+If only ⚠️ → ask user whether to proceed.
+
+<span class="comment">## Halt conditions</span>
+- Change not found → halt
+- openspec validate fails → halt
+- ANY empty / stub spec.md → halt</code></pre>
+        <p class="mute"><strong>使用</strong>：每次 <code>/opsx:propose</code> 完畢、<code>/opsx:apply</code> 前跑 <code>/opsx-verify-specs</code>。發現空目錄 → 修復 C 補 spec。</p>
+
+        <h4>修復 C｜手動 prompt（臨時補洞）</h4>
+        <pre><code>檢查 changes/&lt;change-name&gt;/specs/ 下的所有資料夾。
+列出哪些資料夾缺 spec.md 或 spec.md 空白 / placeholder。
+
+對每個缺的資料夾：
+1. 從 proposal.md 和 design.md 推論該 capability 對應什麼
+2. 若能推論 → 補完對應的 spec.md（OpenSpec delta 格式：
+   ## ADDED Requirements / ## MODIFIED Requirements / ## REMOVED Requirements）
+3. 若推不出 → 告訴我該資料夾是不是 AI 誤產的佔位（該刪）
+4. 檢查 tasks.md 的 task 是否對應到這些 capability
+   - 有對應 → 補 spec.md 後 tasks.md 可用
+   - 沒對應 → tasks.md 本身有缺漏，要補 task
+
+不要自己改 tasks.md，先產補齊計畫給我 review。</code></pre>
+
+        <h4>修復 D｜Pre-apply Hook（擴充統一 hook）</h4>
+        <p>在 <code>~/.claude/hooks/tdd-enforcement.sh</code> 新增 <code>/opsx:apply</code> 前的完整性檢查：</p>
+        <pre><code><span class="comment"># /opsx:apply → 檢查 specs 完整性（Q9）</span>
+if echo "$PROMPT" | grep -qE "/opsx:apply|/opsx-apply"; then
+  <span class="comment"># 找 active change</span>
+  ACTIVE_CHANGE=$(find openspec/changes -maxdepth 1 -mindepth 1 -type d \
+    ! -name archive 2&gt;/dev/null | head -1)
+
+  if [[ -n "$ACTIVE_CHANGE" &amp;&amp; -d "$ACTIVE_CHANGE/specs" ]]; then
+    MISSING=""
+    while IFS= read -r dir; do
+      if [[ ! -f "$dir/spec.md" || ! -s "$dir/spec.md" ]]; then
+        MISSING="$MISSING\n  ❌ $dir/spec.md (missing or empty)"
+      fi
+    done &lt; &lt;(find "$ACTIVE_CHANGE/specs" -mindepth 1 -maxdepth 1 -type d)
+
+    if [[ -n "$MISSING" ]]; then
+      cat &lt;&lt;EOF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[SPECS COMPLETENESS CHECK — Q9]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ Missing / empty spec.md files detected:$MISSING
+
+Before /opsx:apply, you MUST either:
+1. Fill in the missing spec.md files, OR
+2. Remove the empty capability folders (if they were AI-hallucinated)
+
+DO NOT run /opsx:apply with incomplete specs.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EOF
+    fi
+  fi
+fi</code></pre>
+
+        <h4>4 種修復比較</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>修復</th><th>覆蓋率</th><th>成本</th><th>何時用</th></tr></thead>
+            <tbody>
+              <tr><td>A. <code>openspec validate</code></td><td>低（只檢格式）</td><td>0</td><td>永遠先跑，但不夠</td></tr>
+              <tr><td>B. <code>/opsx-verify-specs</code> command</td><td><strong>高</strong>（語意 + cross-ref）</td><td>建檔一次</td><td>每次 propose 完畢跑一次</td></tr>
+              <tr><td>C. 手動 prompt</td><td>中</td><td>每次貼</td><td>臨時發現缺 spec</td></tr>
+              <tr><td>D. Pre-apply hook</td><td><strong>最高</strong>（apply 前強制）</td><td>建檔一次</td><td>所有 <code>/opsx:apply</code> 自動觸發</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout tip"><span class="label">推薦配置</span>B + D 組合拳：<strong>B（<code>/opsx-verify-specs</code>）</strong>主動在 propose 後跑、<strong>D（hook）</strong>當最後防線 —— apply 前若還有漏就攔下。</div>
+
+        <h4>驗證訊號</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>✅ 成功訊號</th><th>❌ 失敗訊號</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>
+                  <ul class="bullets">
+                    <li>每個 <code>specs/*/</code> 都有 <code>spec.md</code> 且非空</li>
+                    <li>每個 spec.md 有 ADDED/MODIFIED/REMOVED Requirements section</li>
+                    <li>tasks.md 每個 task 都對應到某 capability 的 spec</li>
+                    <li>proposal.md 的 AC 都能找到對應 spec 覆蓋</li>
+                  </ul>
+                </td>
+                <td>
+                  <ul class="bullets">
+                    <li>specs 下有空目錄</li>
+                    <li>spec.md 存在但只有標題沒有 Requirements</li>
+                    <li>tasks 提到 capability X，但 specs/X/ 不存在或空</li>
+                    <li>AI 聲稱「validate 通過」就開始 apply</li>
+                  </ul>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout bad"><span class="label">長期風險</span>Q9 不處理 → <code>/opsx:apply</code> 會用殘缺 tasks.md 開始寫 code，code 和 spec 從 Day 1 就不對齊。<code>/opsx:archive</code> 時會把爛 spec 封存到永久 specs/，下次 AI 讀這個 spec 做決策會繼續錯。這是<strong>規格腐化的起點</strong>。</div>
+      </div>
+    </details>
+
   </div>
 
 </section>
@@ -2847,8 +3049,8 @@ TDD-exempt (migration / config / pure rename):
           <tr><td class="step">3</td><td>寫 <code>CONSTITUTION.md</code></td><td>用路線 C：跟 Claude 對談式產 3–7 條非協商原則</td><td>CONSTITUTION.md</td></tr>
           <tr><td class="step">4</td><td>初始化 OpenSpec</td><td><code>npx @fission-ai/openspec init</code></td><td>openspec/ 骨架</td></tr>
           <tr><td class="step">5</td><td>初始化 Superpowers</td><td><code>/plugin install superpowers@claude-plugins-official</code></td><td>skills 就緒</td></tr>
-          <tr><td class="step">6</td><td>寫 CLAUDE.md</td><td>填入 Layer 2 強制規則（不填 @-references — 還沒有 .gsd/）</td><td>CLAUDE.md</td></tr>
-          <tr><td class="step">7</td><td>設 openspec/config.yaml</td><td>用樣板但暫時省略 .gsd/ 引用</td><td>config.yaml</td></tr>
+          <tr><td class="step">6</td><td>寫 CLAUDE.md</td><td>填入 Layer 2 強制規則（不填 @-references — 還沒有 .planning/codebase/）</td><td>CLAUDE.md</td></tr>
+          <tr><td class="step">7</td><td>設 openspec/config.yaml</td><td>用樣板但暫時省略 .planning/codebase/ 引用</td><td>config.yaml</td></tr>
           <tr><td class="step">8</td><td>建基礎骨架</td><td>package.json / tsconfig / lint / CI / test runner</td><td>可跑的 hello world</td></tr>
         </tbody>
       </table>
@@ -2861,7 +3063,7 @@ TDD-exempt (migration / config / pure rename):
 <span class="comment">## Project Context</span>
 @CONSTITUTION.md
 
-<span class="comment"># .gsd/ 引用：MVP 達成後再加（情境 G5）</span>
+<span class="comment"># .planning/codebase/ 引用：MVP 達成後再加（情境 G5）</span>
 
 <span class="comment">## Mandatory Rules</span>
 <span class="comment"># 同 Section 0.2（TDD + archive 硬閘門等）</span></code></pre>
@@ -2888,7 +3090,7 @@ TDD-exempt (migration / config / pure rename):
         <tbody>
           <tr><td class="step">1</td><td><span class="phase-tag phase-read">讀懂</span></td><td>PM spec → <code>docs/incoming-specs/</code></td><td>spec 檔</td></tr>
           <tr><td class="step">2</td><td><span class="phase-tag phase-analyze">分析</span></td><td>Superpowers <code>brainstorming</code> skill（<strong>深度版</strong>，因無歷史可參考）</td><td>design-notes.md</td></tr>
-          <tr><td class="step">3</td><td><span class="phase-tag phase-design">設計</span></td><td><code>/opsx:propose</code> 引用 PM spec + CONSTITUTION.md<br>（<strong>無 .gsd/ 引用</strong>）</td><td>proposal + design + tasks</td></tr>
+          <tr><td class="step">3</td><td><span class="phase-tag phase-design">設計</span></td><td><code>/opsx:propose</code> 引用 PM spec + CONSTITUTION.md<br>（<strong>無 .planning/codebase/ 引用</strong>）</td><td>proposal + design + tasks</td></tr>
           <tr><td class="step">3a</td><td>設計 · 重點審</td><td>Tech lead 詳細 review design.md — 因為這份會被抄用</td><td>sign-off</td></tr>
           <tr><td class="step">4</td><td><span class="phase-tag phase-build">實作</span></td><td><code>/opsx:apply</code> + Superpowers TDD</td><td>code + tests</td></tr>
           <tr><td class="step">5</td><td><span class="phase-tag phase-test">測試</span></td><td>TDD 內建；考慮加 E2E smoke test</td><td>覆蓋基礎流程</td></tr>
@@ -2913,7 +3115,7 @@ TDD-exempt (migration / config / pure rename):
     </div>
     <div class="scenario-meta">
       <div class="meta-item"><span class="ml">何時適用</span>MVP 尚未達成前的後續 feature</div>
-      <div class="meta-item"><span class="ml">跟 Brownfield 情境 2 差異</span>.gsd/ 還沒有、convention 還在形成中</div>
+      <div class="meta-item"><span class="ml">跟 Brownfield 情境 2 差異</span>.planning/codebase/ 還沒有、convention 還在形成中</div>
     </div>
 
     <div class="table-wrap">
@@ -2929,7 +3131,7 @@ TDD-exempt (migration / config / pure rename):
       </table>
     </div>
 
-    <div class="callout tip"><span class="label">沒 .gsd/ 怎辦</span>讀 <code class="inline">openspec/specs/</code> 累積的既有 spec 當 pattern reference。每次 archive 完累積一點，三四個 feature 後 specs/ 就能替代部分 .gsd/ 的角色。</div>
+    <div class="callout tip"><span class="label">沒 .planning/codebase/ 怎辦</span>讀 <code class="inline">openspec/specs/</code> 累積的既有 spec 當 pattern reference。每次 archive 完累積一點，三四個 feature 後 specs/ 就能替代部分 .planning/codebase/ 的角色。</div>
     <div class="callout warn"><span class="label">注意技術債</span>Greenfield 早期 convention 還在形成，<strong>第 3 個 feature 開始</strong>要停下來問：「目前的命名 / 檔案結構還 OK 嗎？」不對就走情境 G4 refactor，不要把壞 pattern 凝固。</div>
   </div>
 
@@ -2983,10 +3185,10 @@ TDD-exempt (migration / config / pure rename):
       <table>
         <thead><tr><th>#</th><th>步驟</th><th>指令 / 動作</th><th>產出</th></tr></thead>
         <tbody>
-          <tr><td class="step">1</td><td>首次跑 <code>/gsd:map-codebase</code></td><td>依 <a href="#setup" style="color: var(--c-super);">Section 0.4</a></td><td>7 份 <code>.gsd/*.md</code></td></tr>
-          <tr><td class="step">2</td><td>Review <code>.gsd/CONCERNS.md</code></td><td>檢查有哪些技術債是 Greenfield 期留下的</td><td>債務清單</td></tr>
-          <tr><td class="step">3</td><td>更新 CLAUDE.md</td><td>加入 <code>@.gsd/*.md</code> references（Layer 1）</td><td>完整 CLAUDE.md</td></tr>
-          <tr><td class="step">4</td><td>更新 config.yaml</td><td>把 context 裡的 <code>.gsd/</code> 引用打開</td><td>完整 config.yaml</td></tr>
+          <tr><td class="step">1</td><td>首次跑 <code>/gsd:map-codebase</code></td><td>依 <a href="#setup" style="color: var(--c-super);">Section 0.4</a></td><td>7 份 <code>.planning/codebase/*.md</code></td></tr>
+          <tr><td class="step">2</td><td>Review <code>.planning/codebase/CONCERNS.md</code></td><td>檢查有哪些技術債是 Greenfield 期留下的</td><td>債務清單</td></tr>
+          <tr><td class="step">3</td><td>更新 CLAUDE.md</td><td>加入 <code>@.planning/codebase/*.md</code> references（Layer 1）</td><td>完整 CLAUDE.md</td></tr>
+          <tr><td class="step">4</td><td>更新 config.yaml</td><td>把 context 裡的 <code>.planning/codebase/</code> 引用打開</td><td>完整 config.yaml</td></tr>
           <tr><td class="step">5</td><td>寫轉換 ADR</td><td>記錄「專案從此進 Brownfield 模式」+ 規則差異</td><td>ADR</td></tr>
           <tr><td class="step">6</td><td>團隊宣告</td><td>Standup / retro 宣告：test coverage 標準提高、refactor 規則改嚴</td><td>—</td></tr>
         </tbody>
@@ -3594,6 +3796,16 @@ ls -la .specify/specs/{active}/tasks.md
     放棄 Superpowers，只用 <strong>OpenSpec</strong> 做規格治理。實作、測試、審查回歸人工紀律。
     這是「規格很重要但不想要額外 ceremony」的團隊選擇。
   </p>
+
+  <figure style="margin: 28px 0; text-align: center;">
+    <img
+      src="openspec-arch_01.png"
+      alt="OpenSpec 架構圖"
+      style="max-width: 100%; height: auto; border: 1px solid var(--border-light); border-radius: var(--radius-md); box-shadow: var(--shadow-2);">
+    <figcaption class="mute" style="margin-top: 10px; font-size: 0.85rem;">
+      OpenSpec 架構圖
+    </figcaption>
+  </figure>
 
   <h3>適用情境</h3>
   <div class="table-wrap">
@@ -4368,9 +4580,321 @@ specify init &lt;PROJECT_NAME&gt;
   <div class="callout warn"><span class="label">硬規則</span><code class="inline">/speckit.constitution</code> 一定要在專案第一個 feature 之前做。constitution 缺席 → AI 在實作階段無法判斷「這樣設計違不違反專案原則」。</div>
 </section>
 
-<!-- ============ 10. Capability Matrix ============ -->
+<!-- ============ 10. cc-sdd-only ============ -->
+<section id="ccsdd-only">
+  <h2><span class="num">10</span>替代流程：只用 cc-sdd</h2>
+  <p class="lead">
+    放棄 OpenSpec、Superpowers、SpecKit，只用 <strong style="color: #7C3AED;">cc-sdd</strong>（Kiro 風格）。
+    <strong>有強 phase gate + 內建 TDD + per-task reviewer 的 SDD harness</strong>，跨 8 種 AI 工具共用同一套 17 skills。
+    社群對 OpenSpec「deliberately avoids rigid phase gates」哲學的明確反對答案。
+  </p>
+
+  <h3>適用情境</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>✅ 適合</th><th>❌ 不適合</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>
+            <ul class="bullets">
+              <li><strong>跨多 AI 工具協作</strong>（同 17 skills 跑 Claude Code / Codex / Cursor / Copilot / Windsurf / OpenCode / Gemini CLI / Antigravity）</li>
+              <li>要<strong>強 phase gate</strong>，需要人類每階段 approve 才能往下</li>
+              <li>要<strong>內建 TDD + per-task reviewer</strong>，不想另外接 Superpowers</li>
+              <li>想<strong>一次裝完</strong>拿到完整 AI-DLC（不用拼多個工具）</li>
+              <li>Greenfield 或新 feature 為主的情境</li>
+              <li>被 OpenSpec 的 Q9「spec 沒完 tasks 就產」問題踩過，想用更嚴的工具</li>
+            </ul>
+          </td>
+          <td>
+            <ul class="bullets">
+              <li>純 Brownfield 既有 code 反推規格（沒 OpenSpec <code>/opsx:onboard</code> 對應）</li>
+              <li>需要 archive 永久 spec（cc-sdd 無 archive）</li>
+              <li>Solo 極簡 / 快速 PoC（phase gate 拖慢）</li>
+              <li>團隊對「每階段人類 approve」反感</li>
+              <li>你只用 Cursor / Copilot 單一工具（SpecKit 已夠用）</li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Trade-offs：得到什麼，失去什麼</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>類別</th><th>得到</th><th>失去</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Phase gate</strong></td><td><strong>每階段強制 approve</strong>（可 <code>--auto</code> / <code>-y</code> 跳過）</td><td>Ceremony 成本比 OpenSpec 高</td></tr>
+        <tr><td><strong>TDD 紀律</strong></td><td><code>/kiro:impl</code> <strong>內建 RED → GREEN</strong>，不用接 Superpowers</td><td>TDD 風格固定，沒 Superpowers 彈性</td></tr>
+        <tr><td><strong>審查</strong></td><td><strong>每 task 獨立 reviewer</strong> + auto-debug pass（reviewer 拒兩次自動啟動 root cause 分析）</td><td>Reviewer 固定內建，客製較少</td></tr>
+        <tr><td><strong>跨 AI 工具</strong></td><td>8 個主流 AI agent 共用 <strong>同 17 skills</strong></td><td>Cursor / Copilot / Windsurf / OpenCode / Gemini / Antigravity 是 beta（Claude Code / Codex stable）</td></tr>
+        <tr><td><strong>粒度治理</strong></td><td>design.md 含 <strong>File Structure Plan</strong> drive task boundaries；tasks 有 <code>_Boundary:_</code> / <code>_Depends:_</code> 標記</td><td>—</td></tr>
+        <tr><td><strong>知識傳承</strong></td><td>Learnings propagate via tasks.md <code># Implementation Notes</code></td><td>—</td></tr>
+        <tr><td><strong>回寫</strong></td><td>—</td><td><strong>無 archive 概念</strong>（spec 永住 <code>.kiro/</code>，類似 SpecKit）</td></tr>
+        <tr><td><strong>Brownfield</strong></td><td>—</td><td>無 onboard 對應，定位 greenfield / 新 feature</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>七階段對應（cc-sdd 指令 + 內建機制）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>階段</th><th>cc-sdd 指令</th><th>內建機制</th><th>需人工補的部分</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="phase-tag phase-read">讀懂</span></td>
+          <td><code>/kiro:discovery</code><br><code>/kiro:steering</code><br><code>/kiro:steering-custom</code>（可選）</td>
+          <td>Discovery 路由請求 + Steering 收集架構 / conventions / domain knowledge 到 steering docs</td>
+          <td>—（Discovery 會告訴你下一步該跑什麼）</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-analyze">分析</span></td>
+          <td><code>/kiro:spec-init &lt;feature&gt;</code><br><code>/kiro:spec-requirements &lt;feature&gt;</code></td>
+          <td>收集 clarifications 產 <code>requirements.md</code>。<strong>Phase gate 1：人類 approve requirements</strong></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-design">設計</span></td>
+          <td><code>/kiro:spec-design &lt;feature&gt;</code></td>
+          <td>先產 <code>research.md</code> 調研筆記（如不需可跳）→ 產 <code>design.md</code>（含 <strong>File Structure Plan</strong>）。<strong>Phase gate 2：人類 approve design</strong></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-build">實作</span></td>
+          <td><code>/kiro:spec-tasks &lt;feature&gt;</code><br><code>/kiro:impl</code></td>
+          <td><strong>Phase gate 3：人類 approve tasks</strong> → <code>/kiro:impl</code> 啟動 long-running autonomous implementation：每 task <strong>獨立 implementer 跑 RED → GREEN</strong>（內建 TDD），在 feature flag 後</td>
+          <td>—（TDD 內建，不用接 SP）</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-test">測試</span></td>
+          <td>（<code>/kiro:impl</code> 內建）</td>
+          <td><strong>TDD 本身包含測試</strong>：per-task RED（寫 failing test）→ GREEN（寫 code 讓 test 過）</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-review">審查</span></td>
+          <td>（<code>/kiro:impl</code> 內建）</td>
+          <td><strong>每 task 獨立 reviewer</strong>（跟 implementer 不同 context）。Reviewer 找 boundary violations，不只 style。<strong>Auto-debug pass</strong>：reviewer 拒兩次 → 在 clean context 啟動 root cause 分析</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td><span class="phase-tag phase-write">回寫</span></td>
+          <td>—（<strong>無 archive</strong>）</td>
+          <td>Learnings propagate via tasks.md 的 <code># Implementation Notes</code>。Spec 永住 <code>.kiro/</code></td>
+          <td>人工維護 spec 跟 code 的一致（類似 SpecKit 的問題）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout tip"><span class="label">核心賣點</span>測試、審查、TDD 都<strong>內建</strong> —— 你不用像 Brownfield 主流程那樣靠 CLAUDE.md + hook + custom command 三疊加補洞。cc-sdd 一個工具解 Q2（TDD）+ Q5（subagent review）+ Q9（phase gate）三題。</div>
+
+  <h3>情境（5 個）</h3>
+
+  <h4>CS-1｜Day 0 新專案啟動</h4>
+  <pre><code><span class="comment"># Step 1：安裝（一次）</span>
+npx cc-sdd@latest --claude --lang en
+  <span class="comment"># → .kiro/ 目錄建立，17 skills 載入</span>
+  <span class="comment"># → Claude Code / Codex 立刻可用；其他 6 工具 beta</span>
+
+<span class="comment"># Step 2：建 steering docs（專案架構 / conventions）</span>
+/kiro:steering
+  <span class="comment"># → .kiro/settings/ 架構 / 規約 / domain 知識</span>
+
+/kiro:steering-custom     <span class="comment"># 可選：進階自訂</span>
+
+<span class="comment"># Step 3：第一個 feature（見 CS-2）</span></code></pre>
+
+  <h4>CS-2｜Sprint 新 feature（完整流程含 3 個 phase gate）</h4>
+  <pre><code><span class="comment"># 路由：discovery 告訴你下一步</span>
+/kiro:discovery
+  <span class="comment"># → AI 評估你的需求，回傳「該跑 /kiro:spec-init」或其他</span>
+
+<span class="comment"># Step 1：初始化 feature</span>
+/kiro:spec-init notification-system
+
+<span class="comment"># Step 2：收集 requirements</span>
+/kiro:spec-requirements notification-system
+  <span class="comment"># → requirements.md（含 clarifications）</span>
+  <span class="comment"># 🚪 Phase Gate 1：人類 review + approve → 才能往下</span>
+
+<span class="comment"># Step 3：設計（含 research + File Structure Plan）</span>
+/kiro:spec-design notification-system
+  <span class="comment"># → research.md（如不需可跳）</span>
+  <span class="comment"># → design.md（含 File Structure Plan）</span>
+  <span class="comment"># 🚪 Phase Gate 2：人類 review + approve</span>
+
+<span class="comment"># Step 4：拆 task（File Structure Plan drives boundaries）</span>
+/kiro:spec-tasks notification-system
+  <span class="comment"># → tasks.md（有 P0/P1 波次 + _Boundary:_ / _Depends:_ 標記）</span>
+  <span class="comment"># 🚪 Phase Gate 3：人類 review + approve</span>
+
+<span class="comment"># Step 5：autonomous implementation</span>
+/kiro:impl
+  <span class="comment"># 對每個 task：</span>
+  <span class="comment">#   1. 獨立 implementer（新 context） 跑 RED → GREEN 在 feature flag 後</span>
+  <span class="comment">#   2. 獨立 reviewer（新 context）審 boundary / correctness</span>
+  <span class="comment">#   3. 若 reviewer 拒 2 次 → auto-debug pass（clean context root cause）</span>
+  <span class="comment">#   4. 通過 → 進下一 task；Learnings 記入 tasks.md Implementation Notes</span>
+
+<span class="comment"># PR merge 後 spec 留在 .kiro/，無 archive 步驟</span></code></pre>
+
+  <h4>CS-3｜Auto Mode（跳 phase gate）</h4>
+  <pre><code><span class="comment"># 趕時間 / 已知流程 / PoC 時，可跳過 approval</span>
+/kiro:spec-requirements notification-system --auto
+/kiro:spec-design notification-system --auto
+/kiro:spec-tasks notification-system --auto
+/kiro:impl --auto
+
+<span class="comment"># 或用 -y 旗標</span>
+/kiro:impl -y</code></pre>
+  <div class="callout warn"><span class="label">Production 勿用 <code class="inline">--auto</code></span>cc-sdd 官方明確說：<em>「Because Spec-Driven Development relies on these gates for quality control, keep manual approvals in place for production work.」</em>Auto mode 只給 PoC / 實驗用。</div>
+
+  <h4>CS-4｜跨 AI 工具協作（cc-sdd 最大獨門）</h4>
+  <pre><code><span class="comment"># 一份 .kiro/ 給 8 種 AI 工具共用</span>
+
+<span class="comment"># PM / 需求：Claude Code</span>
+/kiro:spec-requirements notification-system
+
+<span class="comment"># 設計：Gemini CLI（context window 大）</span>
+/kiro:spec-design notification-system
+
+<span class="comment"># 實作：Cursor（IDE 整合最順）</span>
+/kiro:spec-tasks notification-system
+/kiro:impl
+
+<span class="comment"># Review：Codex CLI（第二雙眼）</span>
+<span class="comment"># 重新跑 /kiro:impl 的 reviewer 部分，或用 Codex 直接讀 tasks.md</span>
+
+<span class="comment"># 同 17 skills，同 .kiro/，任何工具都能接手</span></code></pre>
+
+  <h4>CS-5｜Bug fix（輕量化）</h4>
+  <pre><code><span class="comment"># 小 bug 不走完整 5 階段，直接：</span>
+/kiro:discovery
+  <span class="comment"># 描述 bug → AI 決定要不要走完整流程</span>
+
+<span class="comment"># 若需完整流程（規格有變）→ CS-2 的 Step 1-5</span>
+<span class="comment"># 若純修 code → 直接改 + regression test + PR，不走 .kiro/</span></code></pre>
+
+  <div class="callout bad"><span class="label">最大限制</span><strong>無 archive</strong>：spec 永住 <code class="inline">.kiro/</code>，實作後若 spec 沒同步 → 規格永遠過時（跟 SpecKit 一樣的 Greenfield GQ3 問題）。解法同 GQ3 —— 手動 prompt 做 reconcile。</div>
+
+  <h3>補充：完整生命週期指令序列（進階參考）</h3>
+
+  <h4>一個 feature 的完整流程</h4>
+  <pre><code><span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 前置（專案一生只做一次）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+npx cc-sdd@latest --claude --lang en     <span class="comment"># 安裝</span>
+/kiro:steering                            <span class="comment"># 建 steering docs</span>
+/kiro:steering-custom                     <span class="comment"># 自訂（可選）</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 1：Discovery + Requirements</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/kiro:discovery
+  <span class="comment"># → 路由，告訴你下一步指令</span>
+
+/kiro:spec-init &lt;feature&gt;
+  <span class="comment"># → 建 .kiro/specs/&lt;feature&gt;/ 骨架</span>
+
+/kiro:spec-requirements &lt;feature&gt;
+  <span class="comment"># → requirements.md（含 clarifications）</span>
+  <span class="comment"># 🚪 Phase Gate 1：人類 approve</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 2：Design（含研究 + File Structure Plan）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/kiro:spec-design &lt;feature&gt;
+  <span class="comment"># → research.md（可跳）</span>
+  <span class="comment"># → design.md（必產，含 File Structure Plan）</span>
+  <span class="comment"># 🚪 Phase Gate 2：人類 approve</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 3：Tasks（File Structure drives boundary）</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/kiro:spec-tasks &lt;feature&gt;
+  <span class="comment"># → tasks.md，每 task 有：</span>
+  <span class="comment">#     - P0/P1/P2 波次標記</span>
+  <span class="comment">#     - _Boundary:_ 檔案邊界</span>
+  <span class="comment">#     - _Depends:_ 依賴關係</span>
+  <span class="comment"># 🚪 Phase Gate 3：人類 approve</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 4：Autonomous Implementation</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+/kiro:impl
+  <span class="comment"># 對每個 task（按波次順序）：</span>
+  <span class="comment"># ┌─────────────────────────────────────────┐</span>
+  <span class="comment"># │ 1. 獨立 implementer（fresh context）     │</span>
+  <span class="comment"># │    RED：寫 failing test                 │</span>
+  <span class="comment"># │    GREEN：寫 code 在 feature flag 後    │</span>
+  <span class="comment"># │                                         │</span>
+  <span class="comment"># │ 2. 獨立 reviewer（fresh context）       │</span>
+  <span class="comment"># │    找 boundary violations + correctness │</span>
+  <span class="comment"># │    approve / reject                    │</span>
+  <span class="comment"># │                                         │</span>
+  <span class="comment"># │ 3. Auto-debug（若 reviewer 拒 2 次）    │</span>
+  <span class="comment"># │    clean context root cause 分析        │</span>
+  <span class="comment"># │                                         │</span>
+  <span class="comment"># │ 4. 通過後 learnings → Implementation    │</span>
+  <span class="comment"># │    Notes 寫回 tasks.md，傳承下個 task   │</span>
+  <span class="comment"># └─────────────────────────────────────────┘</span>
+
+<span class="comment"># ═══════════════════════════════════════════════</span>
+<span class="comment"># 階段 5：PR 收尾</span>
+<span class="comment"># ═══════════════════════════════════════════════</span>
+
+<span class="comment"># 【人工】開 PR → reviewer approve → merge</span>
+<span class="comment"># ⚠️ spec 永住 .kiro/specs/&lt;feature&gt;/，無 archive</span></code></pre>
+
+  <h4>指令分層清單</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>類別</th><th>指令</th><th>作用</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="2"><strong>前置</strong></td><td><code>/kiro:steering</code></td><td>收集架構 / conventions / domain</td></tr>
+        <tr><td><code>/kiro:steering-custom</code></td><td>自訂 steering 規則</td></tr>
+        <tr><td rowspan="5"><strong>Feature 流程</strong></td><td><code>/kiro:discovery</code></td><td>路由起點（告訴你下步該做什麼）</td></tr>
+        <tr><td><code>/kiro:spec-init</code></td><td>建 feature 骨架</td></tr>
+        <tr><td><code>/kiro:spec-requirements</code></td><td>→ <code>requirements.md</code>（Gate 1）</td></tr>
+        <tr><td><code>/kiro:spec-design</code></td><td>→ <code>research.md</code> + <code>design.md</code>（Gate 2）</td></tr>
+        <tr><td><code>/kiro:spec-tasks</code></td><td>→ <code>tasks.md</code>（Gate 3）</td></tr>
+        <tr><td><strong>實作</strong></td><td><code>/kiro:impl</code></td><td>每 task implementer + reviewer + auto-debug</td></tr>
+        <tr><td><strong>Flag</strong></td><td><code>--auto</code> / <code>-y</code></td><td>跳過 phase gate（僅 PoC，production 勿用）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>跟其他工具的對照記憶</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>概念</th><th>cc-sdd</th><th>OpenSpec</th><th>SpecKit</th></tr></thead>
+      <tbody>
+        <tr><td>需求層</td><td><code>/kiro:spec-requirements</code></td><td><code>/opsx:propose</code>（合一）</td><td><code>/speckit.specify</code> + <code>/speckit.clarify</code></td></tr>
+        <tr><td>設計層</td><td><code>/kiro:spec-design</code>（含 File Structure Plan）</td><td><code>design.md</code>（選配）</td><td><code>/speckit.plan</code>（含 contracts/data-model）</td></tr>
+        <tr><td>任務層</td><td><code>/kiro:spec-tasks</code>（Boundary/Depends 標記）</td><td><code>tasks.md</code></td><td><code>/speckit.tasks</code></td></tr>
+        <tr><td>實作+TDD</td><td><code>/kiro:impl</code> 內建 RED→GREEN</td><td><code>/opsx:apply</code>（無 TDD，需接 SP）</td><td><code>/speckit.implement</code>（無 TDD，需接 SP）</td></tr>
+        <tr><td>Review</td><td><strong>內建 per-task reviewer</strong></td><td>無（需接 SP subagent）</td><td><code>/speckit.analyze</code>（結構層）</td></tr>
+        <tr><td>Phase gate</td><td><strong>3 個強 gate</strong></td><td>無（刻意不要）</td><td>1 個軟 gate（<code>/clarify</code>）</td></tr>
+        <tr><td>Archive</td><td>無（<code>.kiro/</code> 永住）</td><td><code>/opsx:archive</code> 強</td><td>無（<code>.specify/</code> 永住）</td></tr>
+        <tr><td>跨工具</td><td><strong>8 個同 17 skills</strong></td><td>24+ 但 Claude Code 為主</td><td>30+ AI agent</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout tip"><span class="label">社群定位</span>cc-sdd 被視為<strong>對 OpenSpec 無 gate 哲學的反駁</strong>。README 原話：<em>「humans approve the contract at phase gates, code is what ships」</em> vs OpenSpec 的 <em>「deliberately avoids rigid phase gates」</em> —— 同時代、同問題、相反哲學的兩個工具。</div>
+
+  <div class="callout warn"><span class="label">穩定度提醒</span>Claude Code / Codex 是 <strong>stable</strong>；Cursor / Copilot / Windsurf / OpenCode / Gemini CLI / Antigravity 還是 <strong>beta</strong>。主力工具選 Claude Code 或 Codex 最穩。</div>
+</section>
+
+<!-- ============ 11. Capability Matrix ============ -->
 <section id="matrix">
-  <h2><span class="num">10</span>能力矩陣（7 階段 × 5 方案）</h2>
+  <h2><span class="num">11</span>能力矩陣（7 階段 × 6 方案）</h2>
   <p class="lead">
     把前面 4 條替代流程 + 主流程放在同一張量化表。評分 0-5，讓你一眼看出：
     <strong>選哪條路、選了之後哪些階段要靠人工補救</strong>。
@@ -4402,6 +4926,7 @@ specify init &lt;PROJECT_NAME&gt;
           <th>Only Superpowers</th>
           <th>Only GSD</th>
           <th>Only SpecKit</th>
+          <th>Only cc-sdd</th>
         </tr>
       </thead>
       <tbody>
@@ -4412,6 +4937,7 @@ specify init &lt;PROJECT_NAME&gt;
           <td><strong class="score-2">2</strong><br><span class="matrix-note">brainstorming skill 只導談，不落檔</span></td>
           <td><strong class="score-4">4</strong><br><span class="matrix-note">PROJECT.md + /gsd:plan-phase 情境拆解</span></td>
           <td><strong class="score-5">5</strong><br><span class="matrix-note">/speckit.specify 直接產 user story + 驗收</span></td>
+          <td><strong class="score-4">4</strong><br><span class="matrix-note">/kiro:discovery 路由 + /kiro:steering context capture</span></td>
         </tr>
         <tr>
           <td><span class="phase-tag phase-analyze">分析</span><br><span class="mute" style="font-size: 0.8rem;">拆解 / 澄清</span></td>
@@ -4420,14 +4946,16 @@ specify init &lt;PROJECT_NAME&gt;
           <td><strong class="score-4">4</strong><br><span class="matrix-note">brainstorming skill 強力</span></td>
           <td><strong class="score-3">3</strong><br><span class="matrix-note">planning phase 但無澄清 Gate</span></td>
           <td><strong class="score-5">5</strong><br><span class="matrix-note">/speckit.clarify + /speckit.analyze 雙 Gate</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">/kiro:spec-requirements + Phase Gate 1 強制 approve</span></td>
         </tr>
         <tr>
           <td><span class="phase-tag phase-design">設計</span><br><span class="mute" style="font-size: 0.8rem;">技術方案</span></td>
           <td><strong class="score-4">4</strong><br><span class="matrix-note">design.md，contracts 需自己加</span></td>
           <td><strong class="score-3">3</strong><br><span class="matrix-note">design.md 但無合約 / 資料模型原生產物</span></td>
           <td><strong class="score-2">2</strong><br><span class="matrix-note">writing-plans skill 偏執行計畫而非設計</span></td>
-          <td><strong class="score-3">3</strong><br><span class="matrix-note">S01-PLAN.md + .gsd/ARCHITECTURE.md</span></td>
+          <td><strong class="score-3">3</strong><br><span class="matrix-note">S01-PLAN.md + .planning/codebase/ARCHITECTURE.md</span></td>
           <td><strong class="score-5">5</strong><br><span class="matrix-note">plan.md + contracts/ + data-model.md + research.md 原生</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">design.md 含 File Structure Plan driving task boundary + research.md + Gate 2</span></td>
         </tr>
         <tr>
           <td><span class="phase-tag phase-build">實作</span><br><span class="mute" style="font-size: 0.8rem;">寫 code</span></td>
@@ -4436,6 +4964,7 @@ specify init &lt;PROJECT_NAME&gt;
           <td><strong class="score-4">4</strong><br><span class="matrix-note">executing-plans + TDD skill</span></td>
           <td><strong class="score-5">5</strong><br><span class="matrix-note">/gsd:execute-phase 有 checkpoints + context rot 防禦</span></td>
           <td><strong class="score-3">3</strong><br><span class="matrix-note">/speckit.implement 但無 TDD 強制</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">/kiro:impl 每 task 獨立 implementer，內建 RED→GREEN 在 feature flag 後</span></td>
         </tr>
         <tr>
           <td><span class="phase-tag phase-test">測試</span><br><span class="mute" style="font-size: 0.8rem;">TDD</span></td>
@@ -4444,6 +4973,7 @@ specify init &lt;PROJECT_NAME&gt;
           <td><strong class="score-5">5</strong><br><span class="matrix-note">TDD 是 SP 核心 skill</span></td>
           <td><strong class="score-2">2</strong><br><span class="matrix-note">/gsd:verify-work 有基本檢查但不強制 TDD</span></td>
           <td><strong class="score-1">1</strong><br><span class="matrix-note">無內建 TDD 機制</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">內建 per-task TDD（RED→GREEN 是 /kiro:impl 硬規則）</span></td>
         </tr>
         <tr>
           <td><span class="phase-tag phase-review">審查</span><br><span class="mute" style="font-size: 0.8rem;">review</span></td>
@@ -4452,6 +4982,7 @@ specify init &lt;PROJECT_NAME&gt;
           <td><strong class="score-5">5</strong><br><span class="matrix-note">三個 review skill 完整</span></td>
           <td><strong class="score-3">3</strong><br><span class="matrix-note">/gsd:verify-work 做基本 QA</span></td>
           <td><strong class="score-2">2</strong><br><span class="matrix-note">/speckit.analyze 做 cross-artifact 但無 subagent</span></td>
+          <td><strong class="score-5">5</strong><br><span class="matrix-note">每 task 獨立 reviewer（fresh context）+ auto-debug pass</span></td>
         </tr>
         <tr>
           <td><span class="phase-tag phase-write">回寫</span><br><span class="mute" style="font-size: 0.8rem;">archive / sync</span></td>
@@ -4460,6 +4991,7 @@ specify init &lt;PROJECT_NAME&gt;
           <td><strong class="score-2">2</strong><br><span class="matrix-note">finishing-branch skill 但無 spec 永久化</span></td>
           <td><strong class="score-3">3</strong><br><span class="matrix-note">/gsd:complete-milestone + T01-SUMMARY.md</span></td>
           <td><strong class="score-1">1</strong><br><span class="matrix-note">無 archive 概念；specs 永遠住 .specify/specs/</span></td>
+          <td><strong class="score-2">2</strong><br><span class="matrix-note">無 archive；Implementation Notes propagate，但 spec 永住 .kiro/</span></td>
         </tr>
         <tr class="total-row">
           <td><strong>總分</strong></td>
@@ -4468,6 +5000,7 @@ specify init &lt;PROJECT_NAME&gt;
           <td><strong class="score-4">24 / 35</strong></td>
           <td><strong class="score-4">23 / 35</strong></td>
           <td><strong class="score-4">22 / 35</strong></td>
+          <td><strong class="score-5">31 / 35</strong></td>
         </tr>
       </tbody>
     </table>
@@ -4510,6 +5043,12 @@ specify init &lt;PROJECT_NAME&gt;
           <td>測試（1）/ 回寫（1）</td>
           <td>前期治理最強、<strong>實作 / 收尾靠自律</strong></td>
         </tr>
+        <tr>
+          <td><strong>Only cc-sdd</strong></td>
+          <td>分析 / 設計 / 實作 / 測試 / 審查（5 項）</td>
+          <td>回寫（2）</td>
+          <td><strong>最接近主流程的單工具方案</strong>；phase gate + 內建 TDD + per-task reviewer 三件補齊</td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -4529,7 +5068,7 @@ specify init &lt;PROJECT_NAME&gt;
 
 <!-- ============ 11. FAQ ============ -->
 <section id="faq">
-  <h2><span class="num">11</span>常見困惑</h2>
+  <h2><span class="num">12</span>常見困惑</h2>
 
   <details class="faq">
     <summary>Q1. 為什麼不能跳過 <code>/opsx:archive</code>？</summary>
@@ -4602,7 +5141,7 @@ specify init &lt;PROJECT_NAME&gt;
 
 <!-- ============ 6. Appendix ============ -->
 <section id="appendix">
-  <h2><span class="num">12</span>附錄：CLAUDE.md 樣板</h2>
+  <h2><span class="num">13</span>附錄：CLAUDE.md 樣板</h2>
   <p class="lead">直接貼到專案根目錄的 <code class="inline">CLAUDE.md</code>：</p>
 
   <pre><code><span class="keyword"># AI-Assisted Development Rules</span>
@@ -4666,7 +5205,7 @@ See `docs/ai-dev-workflow-playbook.html` for detailed scenarios:
 
 <!-- ============ 13. External References ============ -->
 <section id="references">
-  <h2><span class="num">13</span>外部參考資料（社群證據）</h2>
+  <h2><span class="num">14</span>外部參考資料（社群證據）</h2>
   <p class="lead">本 Playbook 的「OpenSpec + Superpowers 不會自動串接」以及 Q2「<code class="inline">/opsx:apply</code> 沒啟用 TDD」問題，在社群有大量證據。收錄為決策參考。</p>
 
   <h3>官方整合進度</h3>
@@ -4769,6 +5308,50 @@ See `docs/ai-dev-workflow-playbook.html` for detailed scenarios:
         <tr>
           <td><a href="https://github.com/Fission-AI/OpenSpec/discussions/737">Discussion #737 — Multiple changes into one spec</a></td>
           <td>同 domain 多 change 的 archive 整合策略討論</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Brownfield Q9 — SDD 順序被破壞 社群證據（OpenSpec 專屬）</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>來源</th><th>狀態</th><th>對應的問題</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/issues/783">Issue #783 — Cross-artifact quality review between propose/ff and apply</a></td>
+          <td><strong style="color: var(--warn);">Open</strong></td>
+          <td>官方承認 <code>/opsx:propose</code> / <code>/opsx:ff</code> 一次產所有 artifact 但沒 validation 檢查一致性。要補的正是 Q9 的問題（spec gap、重複、missing abstraction、file bloat）</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/issues/705">Issue #705 — Support Rebuilding Downstream Artifacts from Modified Intermediate Files</a></td>
+          <td><strong style="color: var(--warn);">Open</strong></td>
+          <td>改了 upstream（proposal / design）後沒有指令重產 downstream（tasks.md）。「手工改 prompt / 刪檔重跑 / 寫 script」是 inadequate workaround</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/issues/490">Issue #490 — /openspec:proposal Generates Non-Standard proposal.md</a></td>
+          <td>已回報</td>
+          <td>template 本身 drift，產出不符合 <code>## Why</code> / <code>## What Changes</code> 格式</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/issues/901">Issue #901 — Automatic spec catalog discovery during proposal creation</a></td>
+          <td>Open</td>
+          <td>spec discovery 的 scale 問題：20+ capability 會把整個 context 撐爆</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/issues/391">Issue #391 — Mwahahahaha! It lives!</a></td>
+          <td>已討論</td>
+          <td>相關：artifact 完整性 / 幻覺問題</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/Fission-AI/OpenSpec/blob/main/docs/concepts.md">OpenSpec 官方 concepts.md — Delta Specs</a></td>
+          <td>官方文件</td>
+          <td>明確指出「每個 capability 資料夾應該有 spec.md；空目錄沒意義」— 你遇到的空目錄違反此設計</td>
+        </tr>
+        <tr>
+          <td><a href="https://redreamality.com/garden/notes/openspec-guide/">Redreamality — OpenSpec Deep Dive</a></td>
+          <td>外部實測</td>
+          <td>關鍵原話：<em>「Semantic duplication is invisible to format validation — <code>openspec validate</code> catches structural issues but can't detect that a task duplicates an existing spec's capability.」</em></td>
         </tr>
       </tbody>
     </table>
