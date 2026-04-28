@@ -4,11 +4,12 @@
 >
 > 技術棧:**後端 Java(Spring Boot) + 強制 ORM(Spring Data JPA / Hibernate)** / **前端 GraphQL 為主 + REST 並存**(REST 用於對外 webhook、第三方整合、檔案上傳、admin 工具等)。
 >
-> 文件分四大塊:
+> 文件分五大塊:
 > - **Part A — 共通契約**:前後端都要遵守,前後端工程師都要看
 > - **Part B — 後端規範**:BE only,FE 可略過
 > - **Part C — 前端規範**:FE only,BE 可略過
 > - **Part D — 共通流程 & 工程文化**:全團隊適用(git / CI / 測試 / 觀測 / ADR)
+> - **Part E — Oracle → MySQL 遷移友善規範**:現行 Oracle、規劃切 MySQL,所有開發都要遵守
 >
 > 每題都附「**建議作法**」,可直接採用或微調。原則:**能用工具/規範擋的,絕不靠人記**。
 
@@ -710,6 +711,204 @@
   - **每週 cron 跑 `terraform plan -refresh-only`** 偵測 drift,有 diff 自動開 issue
   - **IAM policy 強制 console read-only**,寫操作只能透過 CI runner 角色(human 走 break-glass 流程,需另一人簽核)
   - 0→1 範圍小可先 monorepo 一份 Terraform,> 5 services 再切
+
+---
+
+# Part E — Oracle → MySQL 遷移友善規範
+
+> **背景**:現行系統使用 Oracle,規劃未來遷移至 MySQL。本章節把「**現在開發就要守、否則日後遷移返工成本不可控**」的規範寫死。
+>
+> **核心原則**:
+> - 業務邏輯全在應用層,**禁 DB 物件**(SP / Trigger / Package / Function / MV / Synonym / DB Link / Job / Sequence)
+> - SQL 寫 **ANSI 方言中立**,Oracle-only 語法 review reject
+> - 資料型別對齊**兩邊都安全的子集**
+> - **雙引擎 CI**:Testcontainers 同時跑 Oracle + MySQL,持續驗證
+> - 例外一律走 ADR
+
+## E1. DB 物件全面禁用
+
+- **議題**:Oracle 端的 SP / Trigger / Package / Function / Materialized View / Synonym / DB Link / Job 在 MySQL 完全不存在或語法不相容,留下來=遷移時逐個改寫 + 行為驗證,工時不可估算
+- **建議作法**:**全面禁用以下 DB 物件**,review 直接 reject:
+
+  | 物件 | 禁用原因 | 替代方案 |
+  |---|---|---|
+  | **Stored Procedure** | PL/SQL ↔ MySQL stored procedure 在語法、變數宣告、cursor、exception 處理上完全不同;邏輯下沉 DB 也不利版控、測試、重構 | 業務邏輯回 `@Service` 層,Java 寫 |
+  | **Trigger** | 兩邊語法不相容;trigger 的隱性副作用在遷移驗證時會製造大量「看不見的」行為差異,debug 痛苦 | `@EntityListeners` / `@PrePersist` / `@PreUpdate`,或 Outbox(§B22) |
+  | **自訂 Function** | 語法不相容;會被 query 引用形成隱性依賴,grep 都未必抓得乾淨 | Java method;真要在 DB 算用 generated column(MySQL 5.7+) |
+  | **Package** | Oracle 獨有,MySQL 完全沒對應概念 | Java package / Service 拆分 |
+  | **Materialized View** | MySQL 沒原生 MV;手動 refresh 邏輯不可遷移 | summary table + 排程刷新(Spring `@Scheduled`),或走分析庫 |
+  | **Synonym** | MySQL 沒對應概念 | Repository 層抽象 |
+  | **DB Link / `FEDERATED` engine** | Oracle DB Link → MySQL FEDERATED 兩個都是反模式;跨庫 join 不可遷移、效能差、難 debug | 應用層分別查再 join,或 event 同步 |
+  | **DBMS_SCHEDULER / DBMS_JOB** | MySQL Event Scheduler 功能弱,且跨庫遷移失敗率高 | Spring `@Scheduled` / Quartz / K8s CronJob |
+  | **Sequence** | MySQL 8.0 才有 sequence,語法仍不同;且分散式不友好 | ULID 應用層生成(對齊 §A9 / §B10) |
+
+## E2. SQL 方言:Oracle-only 語法禁用清單
+
+- **議題**:Oracle 方言寫起來順,但每一條都是日後 grep 改寫的負債,部分(如 `||`)在 MySQL 還會**靜默誤判語意**不會報錯
+- **建議作法**:`sqlfluff` lint rules 擋一部分(對齊 §D4),reviewer 補上剩下:
+
+  | Oracle 寫法 | 禁用原因 | 改寫成 |
+  |---|---|---|
+  | `ROWNUM` / `ROWNUM <= N` | MySQL 無 `ROWNUM` 概念 | `LIMIT n` / Spring Data `Pageable` |
+  | `CONNECT BY ... PRIOR` 階層查詢 | MySQL 不支援 `CONNECT BY` | `WITH RECURSIVE`(ANSI,兩邊都支援) |
+  | `MERGE INTO ... WHEN MATCHED` | MySQL 無 `MERGE`(`INSERT ... ON DUPLICATE KEY UPDATE` 語意不完全等價,也不可遷移) | 應用層 find-then-save / `saveOrUpdate` |
+  | `NVL(a, b)` / `NVL2` | MySQL 無 `NVL` | `COALESCE(a, b)`(ANSI) |
+  | `DECODE(a, b, c, ...)` | Oracle 獨有 | `CASE WHEN ... THEN ... END` |
+  | `SYSDATE` / `SYSTIMESTAMP` | MySQL 雖有同名函式但行為微差(精度、時區) | `CURRENT_TIMESTAMP`,或更好:Java `Instant.now()` 在 service 層設值 |
+  | `\|\|` 字串拼接 | **MySQL 預設 `\|\|` 是 OR 運算子**,靜默回 0/1,不報錯,**這是最危險的一條** | `CONCAT(a, b)` |
+  | `LISTAGG(...) WITHIN GROUP` | MySQL 無 `LISTAGG`;`GROUP_CONCAT` 預設長度限制 1024 byte 會截斷 | Java `Collectors.joining()` 在 service 層 aggregate |
+  | `MINUS` | MySQL 無 `MINUS`(8.0 才有 `EXCEPT`) | `NOT EXISTS` / `LEFT JOIN ... WHERE x.id IS NULL` |
+  | `PIVOT` / `UNPIVOT` | MySQL 完全沒有 | 應用層轉置 |
+  | `TO_DATE` / `TO_CHAR(date, fmt)` | MySQL 是 `STR_TO_DATE` / `DATE_FORMAT`,**format 字串完全不同**(`YYYY-MM-DD` vs `%Y-%m-%d`),靜默結果不同 | Java `DateTimeFormatter` 處理 format,DB 只存 `Instant` |
+  | `(+)` outer join 老語法 | MySQL 不支援 | ANSI `LEFT JOIN` / `RIGHT JOIN` |
+  | `FROM DUAL` | MySQL 雖可選,但某些版本對 `SELECT 1 FROM DUAL` 行為有差 | 直接 `SELECT 1`,不加 `FROM DUAL` |
+  | Oracle hint `/*+ INDEX(t idx) */` | 兩邊 hint 語法完全不同;hint 本身也是反模式(把 optimizer 假設寫死) | 全面禁用,效能問題改寫 query / 加 index |
+  | `WHERE col = ''` 判斷空字串 | **Oracle 把 `''` 當 NULL,MySQL 不會**(行為差異最大的一條,見 §E4) | 統一禁存空字串,validation 擋,query 用 `IS NULL` |
+
+## E3. 資料型別對應(設計階段就要對好)
+
+- **議題**:Oracle 與 MySQL 型別語意不對齊,設計階段沒做好,遷移時 schema diff 才修就晚了
+- **建議作法**:
+
+  | Java | Oracle | MySQL | 注意 |
+  |---|---|---|---|
+  | `String`(短) | `VARCHAR2(n)` | `VARCHAR(n)` | utf8mb4 索引長度限制(見 §E7) |
+  | `String`(長文本) | `CLOB` | `LONGTEXT` | JPA `@Lob`;但 ≥ 4KB 建議走 S3(對齊 §B15) |
+  | `BigDecimal` 金額 | `NUMBER(19,4)` | `DECIMAL(19,4)` | 對齊 §A8 |
+  | `Long` | `NUMBER(19)` | `BIGINT` | PK / FK 顯式精度 |
+  | `Integer` | `NUMBER(10)` | `INT` | 顯式精度 |
+  | `Boolean` | `CHAR(1) 'Y'/'N'` | `CHAR(1) 'Y'/'N'` 或 `TINYINT(1)` | JPA `AttributeConverter` 統一 |
+  | `Instant`(UTC 瞬時) | `TIMESTAMP(6)` | `TIMESTAMP(6)` | UTC 存(對齊 §A7) |
+  | `LocalDate`(純日期) | `DATE` | `DATE` | **僅用於純日期欄位**,不可混作 datetime |
+  | `byte[]` | `RAW(n)` / `BLOB` | `VARBINARY(n)` / `LONGBLOB` | 大檔走 S3 |
+
+  **關鍵禁用清單**:
+
+  | 禁用 | 禁用原因 |
+  |---|---|
+  | 無精度 `NUMBER` | Oracle 允許 `NUMBER` 不指定 (p,s),MySQL `DECIMAL` 必須指定;遷移時無法自動推斷 |
+  | `NUMBER(1)` 表 boolean | 是數字不是布林,MySQL 對應 `TINYINT(1)` 但語意不一致;改 `CHAR(1) 'Y'/'N'` 兩邊一致 |
+  | `FLOAT` / `DOUBLE` 存金額 | 精度問題(對齊 §A8) |
+  | Oracle `DATE` 當 datetime | **Oracle `DATE` 含時分秒,MySQL `DATE` 純日期**,語意完全不同;團隊只用 `Instant` + `TIMESTAMP` 存瞬時 |
+  | `TIMESTAMP WITH LOCAL TIME ZONE` | MySQL 無對應型別 |
+  | Oracle `RAW(n)` 直存 | MySQL 對應 `VARBINARY(n)`,但 raw 用法常綁 PL/SQL |
+
+## E4. NULL vs 空字串(Oracle→MySQL 最大的坑)
+
+- **議題**:**Oracle 把 `''` 視為 NULL,MySQL 區分 `''` 和 NULL**。半年後切 MySQL,所有 `WHERE col = ''` / `WHERE col IS NULL` 行為突變,業務邏輯靜默崩潰,**這是 Oracle→MySQL 最常出事的一條,沒有之一**
+- **禁用原因**:
+  - Oracle 寫入空字串 → DB 實際存 NULL,讀回來是 NULL,所以 `IS NULL` 命中
+  - MySQL 寫入空字串 → DB 真的存 `''`,`IS NULL` 不命中、`= ''` 才命中
+  - 同一份程式碼跑兩邊,結果集會不同,且**不會有任何錯誤訊息**,只是業務算錯
+- **建議作法**:**全團隊統一禁存空字串**,只用 `null` 表示「沒有值」:
+  - **Validation 擋**:DTO `@NotBlank`(空字串、純空白都拒)/ `@Size(min = 1)`
+  - **Service 層 normalize**:輸入空字串 → 轉 `null` 後再存(寫一個共用 `StringUtils.emptyToNull`)
+  - **Query 層**:只用 `IS NULL` / `IS NOT NULL`,**禁 `= ''` / `<> ''`**(`sqlfluff` 規則檔加)
+  - **DB schema**:欄位明訂 `NULL` 或 `NOT NULL DEFAULT '<sentinel>'`,**不允許「可空但又會塞空字串」的灰色狀態**
+  - **必寫 integration test**:驗證 `null` ↔ `""` 的處理在兩邊行為一致,這條測試必收 PR
+
+## E5. Schema / DDL 規範
+
+- **議題**:identifier 命名、大小寫、保留字、Oracle 專屬 DDL 子句,在兩邊行為不同
+- **建議作法**:
+
+  - **保留字避開**:`USER` / `ORDER` / `GROUP` / `KEY` / `COMMENT` / `STATUS` / `TYPE` / `LEVEL` / `SIZE` / `RANK` 等兩邊都禁用,table/column 命名前過 `sqlfluff` reserved keyword 規則
+    - **禁用原因**:踩到保留字 Oracle 可加雙引號逃生,但雙引號又會綁大小寫敏感;MySQL 用 backtick 但風格不一致;不如根本避開
+  - **Identifier 長度 ≤ 30 char**:Oracle 11g 上限是 30(12c 後放寬到 128),MySQL 是 64,**保守取 30**
+  - **大小寫策略**:identifier 一律 `snake_case`,Oracle 端**不加雙引號**(否則變大小寫敏感),MySQL 設 `lower_case_table_names=1`
+    - **禁用原因**:**MySQL 在 Linux 預設 `lower_case_table_names=0`(大小寫敏感)**,但 Windows / macOS 預設 1,跨平台會炸,DBA 必須在初始化階段設定,遷移後才改要 dump-restore 全表
+  - **禁 Oracle 專屬 DDL clause**:`TABLESPACE`、`STORAGE`、`COMPRESS`、`PCTFREE`、`INITRANS`、`PARTITION BY`(MySQL 也有 partition 但語法不同)
+  - **View**:只用 simple view,**禁 materialized view**(MySQL 無原生對應)
+
+## E6. 字符集與 Collation
+
+- **議題**:中文 / emoji 在 utf8 與 utf8mb4 行為差異會造成資料截斷或寫入失敗
+- **建議作法**:
+  - **Oracle 端 `AL32UTF8`、MySQL 端 `utf8mb4`**
+  - **禁 MySQL 的 `utf8`**
+    - **禁用原因**:MySQL 的 `utf8` 是 3-byte 閹割版(歷史遺留),塞 4-byte 字元(emoji、部分罕用漢字)會**截斷或寫入失敗**;`utf8mb4` 才是真 UTF-8
+  - **Collation**:MySQL 用 `utf8mb4_0900_ai_ci`(8.0)或 `utf8mb4_unicode_ci`(5.7)
+  - **大小寫敏感策略統一 case-sensitive**:大小寫不敏感的搜尋邏輯放應用層,或 generated column + index on `LOWER(col)`
+  - Connection string 顯式設 `characterEncoding=UTF-8`、`useUnicode=true`(MySQL 端)
+
+## E7. 索引策略
+
+- **議題**:Oracle 的 bitmap / function-based / reverse key index 在 MySQL 都不存在;utf8mb4 在 InnoDB 還有 index 長度限制
+- **建議作法**:
+  - **只用 B-tree index**
+  - **禁 Oracle bitmap index / function-based index / reverse key index**
+    - **禁用原因**:MySQL 沒有對應索引型別;function-based index 改用 generated column + 一般 index(MySQL 5.7+)寫法兩邊都跑得起來
+  - **VARCHAR 索引長度上限**:utf8mb4 一字 4 byte,InnoDB index key 上限 3072 byte → **VARCHAR 欄位作 index 時長度 ≤ 768 char**
+    - 超過用 prefix index `(col(255))`
+    - **禁用原因**:Oracle 沒這個限制,設計階段不注意,切 MySQL 時 `CREATE INDEX` 會直接失敗
+  - 索引欄位順序顯式列出,不靠 optimizer 自動選
+
+## E8. Migration 工具與雙引擎 CI
+
+- **議題**:Flyway 寫的 SQL 若帶 Oracle 方言,日後切 MySQL 整批 migration 重寫
+- **建議作法**:
+  - **Flyway SQL 必須 ANSI / 兩邊都跑得起來**,違反就是 reject
+  - **CI 雙引擎跑 migration**:Testcontainers 同時起 **Oracle XE + MySQL 8**,migration 兩邊 apply 都過、測試都綠才能 merge
+  - 一個 PR 一個 migration、forward-only(對齊 §B8.4)
+  - **Schema diff 持續監測**:CI 每日跑 Oracle ↔ MySQL schema diff(Liquibase / Atlas),有差異自動開 issue
+  - **migration 內禁混 DDL/DML**
+    - **禁用原因**:兩邊 implicit commit 行為微差,DDL 中夾 DML 在某些 MySQL 版本會 commit 順序不可預期;拆兩個 migration 檔
+
+## E9. 交易與並發
+
+- **議題**:Oracle 與 MySQL 在隔離級別、鎖行為、autonomous transaction 上差異顯著
+- **建議作法**:
+
+  | 項目 | Oracle 預設 | MySQL InnoDB 預設 | 團隊規範 |
+  |---|---|---|---|
+  | 隔離級別 | READ COMMITTED | REPEATABLE READ | **顯式 `READ COMMITTED`**(Spring `@Transactional(isolation = READ_COMMITTED)`),避免 MySQL 預設 RR 的 gap lock 製造和 Oracle 不同的死鎖型態 |
+  | Autonomous transaction | 支援(`PRAGMA AUTONOMOUS_TRANSACTION`) | 不支援 | **禁用**,改 `REQUIRES_NEW` + Service 拆分(對齊 §B3) |
+  | `SELECT FOR UPDATE` | 不鎖 read | RR 下 gap lock | 雙引擎 integration test 必驗 |
+  | DDL 隱式 commit | 是 | 是(8.0 atomic DDL,但仍隱式 commit) | migration 禁混 DML |
+  | Optimistic lock | — | — | Entity 預設加 `@Version`,跨庫一致 |
+
+  **Autonomous transaction 禁用原因**:Oracle PL/SQL `PRAGMA AUTONOMOUS_TRANSACTION` 在 MySQL 完全沒有對應;業務若依賴(如 audit log 即使主交易 rollback 也要落地),遷移時整段邏輯要重寫成 Spring `REQUIRES_NEW` + 拆 Service。
+
+## E10. 測試規範
+
+- **議題**:H2 / HSQLDB mock 的 SQL 方言永遠和 production 不一致,測過的還是炸
+- **建議作法**:
+  - Integration test 用 **Testcontainers + 真 Oracle**(現行)+ **真 MySQL**(目標)雙引擎跑(擴 §B17)
+  - **禁 H2 / HSQLDB**(再次強調)
+    - **禁用原因**:H2 的 SQL 方言與 Oracle、MySQL 都不完全一致;mock 測試通過 production 仍會炸,屬於「假安全感」
+  - 同一份 repository test 在 `oracle` / `mysql` 兩個 Spring profile 都跑,差異即時暴露
+  - CI 慢沒關係,**遷移風險遠大於 CI 時間成本**
+
+## E11. 效能假設不要綁 Oracle
+
+- **議題**:Oracle CBO 強、hash join / merge join 成熟;MySQL 8.0 才有 hash join 且場景受限;寫 query 時若假設 Oracle optimizer 會幫忙,MySQL 上會慢 10x
+- **建議作法**:
+  - 大表 query **不依賴 Oracle CBO 假設**,熱門 query 在兩邊都跑 EXPLAIN,執行計畫寫進 `docs/perf/<query>.md` 留底
+  - **報表 / 複雜分析查詢**:評估獨立分析庫,不寫死在 OLTP 庫
+    - **原因**:MySQL 在大型分析、視窗函式、複雜 join 表現明顯弱於 Oracle;OLTP / OLAP 早期分離
+  - 禁 hint(對齊 §E2)
+
+## E12. 遷移執行階段(切換時)
+
+- **議題**:0→1 階段用不到,但今天先把策略寫進 ADR,日後切換時不用臨時設計
+- **建議作法**(寫進 `ADR-XXX: Oracle to MySQL Migration Strategy`):
+  - **抽象層**:`DataSourceRouter` / 可切換 `JpaTransactionManager`,支援階段性切流量
+  - **Dual-write 階段**:寫入兩邊一段時間,Reconciliation script 批次比對 row count + checksum,差異列入 incident
+  - **Dual-read 階段**:讀仍走 Oracle,MySQL 為 shadow,不一致開 incident
+  - **Cutover runbook**(對齊 §D15):凍結窗、切流量步驟、監控指標、rollback 條件
+  - **Backfill**:歷史資料一次性遷移工具(可重跑、idempotent,對齊 §A19 思路)
+  - **Schema diff CI**:Liquibase / Atlas 持續比對
+
+## E13. 文件與 ADR
+
+- **議題**:遷移是長期工程,規範散落會變空話
+- **建議作法**:
+  - **首發 ADR**:`ADR-001: Oracle to MySQL Migration` 寫死遷移目標、時程窗、雙引擎期、cutover 條件(對齊 §D13)
+  - **PR template** 加兩條 checkbox:
+    - ☐ 此 PR 不含 Oracle-only 語法 / DB 物件(對照 §E1 / §E2)
+    - ☐ 已在 MySQL Testcontainers 驗過(或標註 N/A 並說明)
+  - `CONTRIBUTING.md` 補一節「Database-Agnostic Guidelines」,新人第一站(對齊 §D14)
+  - **每季 review** 此章節:已修掉的禁用條目可移除,新發現的坑加進來
 
 ---
 
